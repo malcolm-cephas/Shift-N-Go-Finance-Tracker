@@ -70,20 +70,21 @@ const Navigation = () => {
   }
 
   return (
-    <nav className="bg-white dark:bg-neutral-900 shadow-lg dark:shadow-neutral-900/50 border-b dark:border-neutral-700 transition-colors duration-200">
+    <nav className="bg-[#F8F8F8] shadow-xl border-b border-gray-200 transition-colors duration-200 relative z-[100]">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
-          {/* Logo/Brand */}
-          <div className="flex items-center space-x-3">
-            <Image
-              src="/logo.png"
-              alt="Shift N Go Logo"
-              width={32}
-              height={32}
-              className="rounded-sm"
-            />
-            <span className="text-xl font-bold text-brand-red hidden sm:block">Shift N Go</span>
-            <span className="text-lg font-bold text-brand-red sm:hidden">Shift N Go</span>
+        <div className="flex justify-between items-center py-1">
+          {/* Logo/Brand - Banner Logo */}
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center group">
+              <Image
+                src="/shiftngo-banner.png"
+                alt="Shift N Go Banner"
+                width={300}
+                height={96}
+                className="h-24 w-auto transition-all duration-300 group-hover:scale-[1.01]"
+                priority
+              />
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
@@ -92,8 +93,8 @@ const Navigation = () => {
               <Link
                 href="/"
                 className={`px-3 py-2 rounded-md text-sm font-bold transition-colors ${pathname === '/'
-                  ? 'text-brand-red bg-red-50 dark:bg-red-900/10'
-                  : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800'
+                  ? 'text-brand-red bg-white shadow-sm'
+                  : 'text-gray-700 hover:bg-white/60 hover:text-gray-900'
                   }`}
               >
                 SUMMARY
@@ -105,7 +106,7 @@ const Navigation = () => {
                   onClick={() => setActiveDropdown(activeDropdown === 'inventory' ? null : 'inventory')}
                   className={`px-3 py-2 rounded-md text-sm font-bold transition-colors uppercase tracking-tight flex items-center space-x-1 ${inventoryItems.some(i => i.href === pathname)
                     ? 'text-brand-red'
-                    : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800'
+                    : 'text-gray-700 hover:bg-gray-100'
                     }`}
                 >
                   <span>Inventory</span>
@@ -114,13 +115,13 @@ const Navigation = () => {
                   </svg>
                 </button>
                 {activeDropdown === 'inventory' && (
-                  <div className="absolute left-0 mt-2 w-48 rounded-md bg-white dark:bg-neutral-800 shadow-xl border dark:border-neutral-700 z-50">
+                  <div className="absolute left-0 mt-2 w-48 rounded-md bg-[#F8F8F8] shadow-2xl border border-gray-100 z-[110]">
                     {inventoryItems.map(item => (
                       <Link
                         key={item.href}
                         href={item.href}
                         onClick={() => setActiveDropdown(null)}
-                        className={`block px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors ${pathname === item.href ? 'text-brand-red dark:text-brand-red bg-red-50/50 dark:bg-red-900/10' : 'text-gray-700 dark:text-neutral-300'}`}
+                        className={`block px-4 py-3 text-sm font-medium hover:bg-white transition-colors ${pathname === item.href ? 'text-brand-red bg-white' : 'text-gray-700'}`}
                       >
                         {item.label}
                       </Link>
@@ -135,7 +136,7 @@ const Navigation = () => {
                   onClick={() => setActiveDropdown(activeDropdown === 'accounting' ? null : 'accounting')}
                   className={`px-3 py-2 rounded-md text-sm font-bold transition-colors uppercase tracking-tight flex items-center space-x-1 ${accountingItems.some(i => i.href === pathname)
                     ? 'text-brand-red'
-                    : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800'
+                    : 'text-gray-700 hover:bg-gray-100'
                     }`}
                 >
                   <span>Operations</span>
@@ -144,13 +145,13 @@ const Navigation = () => {
                   </svg>
                 </button>
                 {activeDropdown === 'accounting' && (
-                  <div className="absolute left-0 mt-2 w-52 rounded-md bg-white dark:bg-neutral-800 shadow-xl border dark:border-neutral-700 z-50">
+                  <div className="absolute left-0 mt-2 w-52 rounded-md bg-[#F8F8F8] shadow-2xl border border-gray-100 z-[110]">
                     {accountingItems.map(item => (
                       <Link
                         key={item.href}
                         href={item.href}
                         onClick={() => setActiveDropdown(null)}
-                        className={`block px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors ${pathname === item.href ? 'text-brand-red bg-red-50 dark:bg-red-900/10' : 'text-gray-700 dark:text-neutral-300'}`}
+                        className={`block px-4 py-3 text-sm font-medium hover:bg-white transition-colors ${pathname === item.href ? 'text-brand-red bg-white' : 'text-gray-700'}`}
                       >
                         {item.label}
                       </Link>
@@ -165,7 +166,7 @@ const Navigation = () => {
                   onClick={() => setActiveDropdown(activeDropdown === 'analytics' ? null : 'analytics')}
                   className={`px-3 py-2 rounded-md text-sm font-bold transition-colors uppercase tracking-tight flex items-center space-x-1 ${analyticsItems.some(i => i.href === pathname)
                     ? 'text-brand-red'
-                    : 'text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800'
+                    : 'text-gray-700 hover:bg-gray-100'
                     }`}
                 >
                   <span>Analytics</span>
@@ -174,13 +175,13 @@ const Navigation = () => {
                   </svg>
                 </button>
                 {activeDropdown === 'analytics' && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-md bg-white dark:bg-neutral-800 shadow-xl border dark:border-neutral-700 z-50">
+                  <div className="absolute right-0 mt-2 w-48 rounded-md bg-[#F8F8F8] shadow-2xl border border-gray-100 z-[110]">
                     {analyticsItems.map(item => (
                       <Link
                         key={item.href}
                         href={item.href}
                         onClick={() => setActiveDropdown(null)}
-                        className={`block px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors ${pathname === item.href ? 'text-brand-red bg-red-50 dark:bg-red-900/10' : 'text-gray-700 dark:text-neutral-300'}`}
+                        className={`block px-4 py-3 text-sm font-medium hover:bg-white transition-colors ${pathname === item.href ? 'text-brand-red bg-white' : 'text-gray-700'}`}
                       >
                         {item.label}
                       </Link>
@@ -190,7 +191,7 @@ const Navigation = () => {
               </div>
 
               {/* Profile menu Actions */}
-              <div className="flex items-center space-x-4 pl-4 border-l dark:border-neutral-700 ml-4">
+              <div className="flex items-center space-x-4 pl-4 border-l border-gray-200 ml-4">
                 <ThemeSlider />
               </div>
               {isAuthConfigured && user && (
@@ -210,29 +211,29 @@ const Navigation = () => {
                     />
                   </button>
                   {isProfileMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-56 rounded-md border border-gray-200 dark:border-neutral-600 bg-white dark:bg-neutral-800 shadow-lg z-50">
-                      <div className="px-4 py-3 border-b border-gray-100 dark:border-neutral-700">
-                        <p className="text-sm text-gray-500 dark:text-neutral-400">Signed in as</p>
-                        <p className="mt-1 text-sm font-semibold text-gray-800 dark:text-neutral-200">{displayEmail}</p>
+                    <div className="absolute right-0 mt-2 w-56 rounded-md border border-gray-200 bg-[#F8F8F8] shadow-2xl z-[120]">
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="text-sm text-gray-500">Signed in as</p>
+                        <p className="mt-1 text-sm font-semibold text-gray-800">{displayEmail}</p>
                       </div>
                       <div className="py-1">
                         <Link
                           href="/settings"
-                          className="block px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-white transition-colors"
                           onClick={() => setIsProfileMenuOpen(false)}
                         >
                           Settings
                         </Link>
                         <Link
                           href="/disclaimer"
-                          className="block px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-white transition-colors"
                           onClick={() => setIsProfileMenuOpen(false)}
                         >
                           Privacy
                         </Link>
                         <a
                           href="/auth/logout"
-                          className="block px-4 py-2 text-sm text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-white transition-colors"
                         >
                           Logout
                         </a>
@@ -284,12 +285,12 @@ const Navigation = () => {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 bg-gray-50 dark:bg-neutral-800 border-t dark:border-neutral-700">
-            <div className="flex items-center space-x-3 px-3 py-3 rounded-md bg-white dark:bg-neutral-700 border border-gray-200 dark:border-neutral-600">
-              <Image src={defaultAvatar} alt="Profile avatar" width={40} height={40} className="rounded-full border border-gray-200 dark:border-neutral-600" />
+          <div className="px-2 pt-2 pb-3 space-y-1 bg-[#F8F8F8] border-t border-gray-200">
+            <div className="flex items-center space-x-3 px-3 py-3 rounded-md bg-white border border-gray-200">
+              <Image src={defaultAvatar} alt="Profile avatar" width={40} height={40} className="rounded-full border border-gray-200" />
               <div className="flex flex-col">
-                <span className="text-sm text-gray-500 dark:text-neutral-400">Signed in as</span>
-                <span className="text-sm font-semibold text-gray-800 dark:text-neutral-200">{displayEmail}</span>
+                <span className="text-sm text-gray-500">Signed in as</span>
+                <span className="text-sm font-semibold text-gray-800">{displayEmail}</span>
               </div>
             </div>
             {/* Main Nav Items */}
@@ -306,8 +307,8 @@ const Navigation = () => {
                   href={item.href}
                   onClick={closeMobileMenu}
                   className={`flex items-center px-3 py-3 rounded-md text-base font-medium transition-colors ${isActive
-                    ? 'bg-neutral-50 dark:bg-neutral-800 text-brand-red border border-brand-red/20'
-                    : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700'
+                    ? 'bg-white text-brand-red border border-gray-200 shadow-sm'
+                    : 'text-gray-600 hover:bg-white/60'
                     }`}
                 >
                   <span>{item.label}</span>
@@ -315,18 +316,18 @@ const Navigation = () => {
               );
             })}
             
-            <div className="pt-4 mt-4 border-t border-gray-200 dark:border-neutral-700">
+            <div className="pt-4 mt-4 border-t border-gray-200">
               <Link
                 href="/settings"
                 onClick={closeMobileMenu}
-                className="flex items-center px-3 py-3 rounded-md text-base font-medium text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                className="flex items-center px-3 py-3 rounded-md text-base font-medium text-gray-600 hover:bg-white/60"
               >
                 <span>Settings</span>
               </Link>
               <Link
                 href="/disclaimer"
                 onClick={closeMobileMenu}
-                className="flex items-center px-3 py-3 rounded-md text-base font-medium text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                className="flex items-center px-3 py-3 rounded-md text-base font-medium text-gray-600 hover:bg-white/60"
               >
                 <span>Privacy</span>
               </Link>
@@ -335,7 +336,7 @@ const Navigation = () => {
                 <a
                   href="/auth/logout"
                   onClick={closeMobileMenu}
-                  className="flex items-center px-3 py-3 rounded-md text-base font-medium text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-700"
+                  className="flex items-center px-3 py-3 rounded-md text-base font-medium text-gray-600 hover:bg-white/60"
                 >
                   <span>Logout</span>
                 </a>
