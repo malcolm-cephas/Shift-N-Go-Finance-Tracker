@@ -5,7 +5,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function LogExpensesPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']}>
       <div>
         <LogTransactions />
       </div>

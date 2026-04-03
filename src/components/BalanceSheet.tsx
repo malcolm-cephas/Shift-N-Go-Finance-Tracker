@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { Account, AccountWithBalance } from '@/types/finance';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useAuth } from '@/context/AuthContext';
 import { CurrencySelector } from './CurrencySelector';
 import WelcomeScreen from './WelcomeScreen';
 import { ManageAccountModal } from './ManageAccountModal';
@@ -12,7 +13,9 @@ import { ConfirmationModal } from './ui/ConfirmationModal';
 export const BalanceSheet = () => {
   const { getAccountsWithBalances, deleteAccount, updateAccount, isLoading } = useFinance();
   const { formatCurrency } = useCurrency();
+  const { role } = useAuth();
   const accountsWithBalances = getAccountsWithBalances();
+  const isReadOnly = role === 'INVESTOR';
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
 
@@ -72,20 +75,24 @@ export const BalanceSheet = () => {
                     }`}>
                     {formatCurrency(account.currentBalance)}
                   </span>
-                  <button
-                    onClick={() => setEditingAccount(account)}
-                    className="text-gray-500 dark:text-neutral-400 hover:text-gray-800 dark:hover:text-white px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-neutral-800 transition-colors text-xs font-semibold uppercase tracking-tight"
-                    title="Edit account"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteAccount(account.id)}
-                    className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                    title="Delete account"
-                  >
-                    ×
-                  </button>
+                  {!isReadOnly && (
+                    <>
+                      <button
+                        onClick={() => setEditingAccount(account)}
+                        className="text-gray-500 dark:text-neutral-400 hover:text-gray-800 dark:hover:white px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-neutral-800 transition-colors text-xs font-semibold uppercase tracking-tight"
+                        title="Edit account"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setAccountToDelete(account)}
+                        className="text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 text-sm px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                        title="Delete account"
+                      >
+                        ×
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}

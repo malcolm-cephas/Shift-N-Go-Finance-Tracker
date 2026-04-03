@@ -5,7 +5,7 @@ import { BankStatementUpload } from '@/components/BankStatementUpload';
 
 export default function BankStatementsPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']}>
       <BankStatementUpload />
     </ProtectedRoute>
   );

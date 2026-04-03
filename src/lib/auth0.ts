@@ -1,7 +1,16 @@
 import { Auth0Client } from "@auth0/nextjs-auth0/server";
 
-const isConfigured = false;
+export const auth0 = process.env.NEXT_PUBLIC_AUTH0_ENABLED === 'true' 
+  ? new Auth0Client({
+      appBaseUrl: process.env.AUTH0_BASE_URL || 'http://localhost:3000',
+      domain: process.env.AUTH0_DOMAIN,
+      clientId: process.env.AUTH0_CLIENT_ID,
+      clientSecret: process.env.AUTH0_CLIENT_SECRET,
+      secret: process.env.AUTH0_SECRET,
+      authorizationParameters: {
+        scope: 'openid profile email',
+      },
+    }) 
+  : null;
 
-export const auth0: Auth0Client | null = null;
-
-export const isAuth0Configured = isConfigured;
+export const isAuth0Configured = auth0 !== null;

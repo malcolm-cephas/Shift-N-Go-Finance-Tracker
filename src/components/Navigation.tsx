@@ -8,13 +8,15 @@ import { useAuth } from '@/context/AuthContext';
 import { ThemeSlider } from './ThemeSlider';
 
 const Navigation = () => {
-  const { user, isLoading, isAuthConfigured } = useAuth();
+  const { user, isLoading, isAuthConfigured, role } = useAuth();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const displayEmail = user?.email ?? 'Logged in user';
-  const defaultAvatar = '/image.png';
+  const defaultAvatar = '/profile-placeholder.svg';
+
+  const isAdminOrManager = role === 'ADMIN' || role === 'MANAGER';
 
   const inventoryItems = [
     { href: '/add-account', label: 'Business Units' },
@@ -100,65 +102,69 @@ const Navigation = () => {
                 SUMMARY
               </Link>
 
-              {/* Inventory Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setActiveDropdown(activeDropdown === 'inventory' ? null : 'inventory')}
-                  className={`px-3 py-2 rounded-md text-sm font-bold transition-colors uppercase tracking-tight flex items-center space-x-1 ${inventoryItems.some(i => i.href === pathname)
-                    ? 'text-brand-red'
-                    : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                >
-                  <span>Inventory</span>
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {activeDropdown === 'inventory' && (
-                  <div className="absolute left-0 mt-2 w-48 rounded-md bg-[#F8F8F8] shadow-2xl border border-gray-100 z-[110]">
-                    {inventoryItems.map(item => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setActiveDropdown(null)}
-                        className={`block px-4 py-3 text-sm font-medium hover:bg-white transition-colors ${pathname === item.href ? 'text-brand-red bg-white' : 'text-gray-700'}`}
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {/* Inventory Dropdown - Restricted to Admin/Manager */}
+              {isAdminOrManager && (
+                <div className="relative">
+                  <button
+                    onClick={() => setActiveDropdown(activeDropdown === 'inventory' ? null : 'inventory')}
+                    className={`px-3 py-2 rounded-md text-sm font-bold transition-colors uppercase tracking-tight flex items-center space-x-1 ${inventoryItems.some(i => i.href === pathname)
+                      ? 'text-brand-red'
+                      : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                  >
+                    <span>Inventory</span>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {activeDropdown === 'inventory' && (
+                    <div className="absolute left-0 mt-2 w-48 rounded-md bg-[#F8F8F8] shadow-2xl border border-gray-100 z-[110]">
+                      {inventoryItems.map(item => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setActiveDropdown(null)}
+                          className={`block px-4 py-3 text-sm font-medium hover:bg-white transition-colors ${pathname === item.href ? 'text-brand-red bg-white' : 'text-gray-700'}`}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
-              {/* Accounting Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() => setActiveDropdown(activeDropdown === 'accounting' ? null : 'accounting')}
-                  className={`px-3 py-2 rounded-md text-sm font-bold transition-colors uppercase tracking-tight flex items-center space-x-1 ${accountingItems.some(i => i.href === pathname)
-                    ? 'text-brand-red'
-                    : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                >
-                  <span>Operations</span>
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {activeDropdown === 'accounting' && (
-                  <div className="absolute left-0 mt-2 w-52 rounded-md bg-[#F8F8F8] shadow-2xl border border-gray-100 z-[110]">
-                    {accountingItems.map(item => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setActiveDropdown(null)}
-                        className={`block px-4 py-3 text-sm font-medium hover:bg-white transition-colors ${pathname === item.href ? 'text-brand-red bg-white' : 'text-gray-700'}`}
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {/* Accounting Dropdown - Restricted to Admin/Manager */}
+              {isAdminOrManager && (
+                <div className="relative">
+                  <button
+                    onClick={() => setActiveDropdown(activeDropdown === 'accounting' ? null : 'accounting')}
+                    className={`px-3 py-2 rounded-md text-sm font-bold transition-colors uppercase tracking-tight flex items-center space-x-1 ${accountingItems.some(i => i.href === pathname)
+                      ? 'text-brand-red'
+                      : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                  >
+                    <span>Operations</span>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {activeDropdown === 'accounting' && (
+                    <div className="absolute left-0 mt-2 w-52 rounded-md bg-[#F8F8F8] shadow-2xl border border-gray-100 z-[110]">
+                      {accountingItems.map(item => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setActiveDropdown(null)}
+                          className={`block px-4 py-3 text-sm font-medium hover:bg-white transition-colors ${pathname === item.href ? 'text-brand-red bg-white' : 'text-gray-700'}`}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Analytics Dropdown */}
               <div className="relative">
@@ -217,13 +223,24 @@ const Navigation = () => {
                         <p className="mt-1 text-sm font-semibold text-gray-800">{displayEmail}</p>
                       </div>
                       <div className="py-1">
-                        <Link
-                          href="/settings"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-white transition-colors"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                        >
-                          Settings
-                        </Link>
+                        {isAdminOrManager && (
+                          <Link
+                            href="/settings"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-white transition-colors font-medium"
+                            onClick={() => setIsProfileMenuOpen(false)}
+                          >
+                            Settings
+                          </Link>
+                        )}
+                        {role === 'ADMIN' && (
+                          <Link
+                            href="/manage-access"
+                            className="block px-4 py-2 text-sm text-brand-red font-black hover:bg-white transition-colors"
+                            onClick={() => setIsProfileMenuOpen(false)}
+                          >
+                            Manage Access 🔐
+                          </Link>
+                        )}
                         <Link
                           href="/disclaimer"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-white transition-colors"
@@ -296,8 +313,8 @@ const Navigation = () => {
             {/* Main Nav Items */}
             {[
               { href: '/', label: 'Balance Sheet Summary' },
-              ...inventoryItems,
-              ...accountingItems,
+              ...(isAdminOrManager ? inventoryItems : []),
+              ...(isAdminOrManager ? accountingItems : []),
               ...analyticsItems,
             ].map((item) => {
               const isActive = pathname === item.href;
@@ -317,13 +334,15 @@ const Navigation = () => {
             })}
             
             <div className="pt-4 mt-4 border-t border-gray-200">
-              <Link
-                href="/settings"
-                onClick={closeMobileMenu}
-                className="flex items-center px-3 py-3 rounded-md text-base font-medium text-gray-600 hover:bg-white/60"
-              >
-                <span>Settings</span>
-              </Link>
+              {isAdminOrManager && (
+                <Link
+                  href="/settings"
+                  onClick={closeMobileMenu}
+                  className="flex items-center px-3 py-3 rounded-md text-base font-medium text-gray-600 hover:bg-white/60"
+                >
+                  <span>Settings</span>
+                </Link>
+              )}
               <Link
                 href="/disclaimer"
                 onClick={closeMobileMenu}

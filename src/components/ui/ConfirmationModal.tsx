@@ -11,6 +11,7 @@ interface ConfirmationModalProps {
     cancelText?: string;
     variant?: 'danger' | 'warning' | 'info';
     requiresChallenge?: boolean;
+    challengeString?: string;
 }
 
 export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -23,6 +24,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     cancelText = 'Cancel',
     variant = 'danger',
     requiresChallenge = false,
+    challengeString = 'DELETE',
 }) => {
     const [challengeValue, setChallengeValue] = useState('');
     const [isRendered, setIsRendered] = useState(false);
@@ -136,7 +138,7 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     };
 
     const styles = getVariantStyles();
-    const isConfirmDisabled = requiresChallenge && challengeValue !== 'DELETE';
+    const isConfirmDisabled = requiresChallenge && challengeValue !== challengeString;
 
     return (
         <div
@@ -176,14 +178,14 @@ export const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                             htmlFor="challenge-input"
                             className="block text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 cursor-pointer"
                         >
-                            Type <span className="text-red-600">DELETE</span> to confirm
+                            Type <span className="text-red-600 font-black">{challengeString}</span> to confirm
                         </label>
                         <input
                             id="challenge-input"
                             type="text"
                             value={challengeValue}
                             onChange={(e) => setChallengeValue(e.target.value)}
-                            placeholder="DELETE"
+                            placeholder={challengeString}
                             className="w-full px-5 py-4 rounded-2xl border-2 border-gray-100 bg-gray-50 text-gray-900 focus:border-red-500 focus:ring-0 transition-all outline-none font-bold text-lg placeholder:text-gray-300"
                         />
                     </div>

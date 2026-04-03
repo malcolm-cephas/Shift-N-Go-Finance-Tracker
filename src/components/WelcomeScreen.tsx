@@ -18,116 +18,14 @@ const WelcomeScreen = () => {
           </p>
         </div>
 
-        {/* Privacy Banner */}
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-6 mb-8">
-          <div className="flex items-center justify-center">
-            <div className="flex-shrink-0">
-              <span className="text-2xl mr-3 font-bold text-green-600">Secure</span>
-            </div>
-            <div className="text-center">
-              <h2 className="text-lg font-medium text-green-800 dark:text-green-300">100% Private & Secure</h2>
-              <p className="mt-1 text-green-700 dark:text-green-400">
-                Your financial data stays on your device. No servers, no accounts, no data sharing.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Start Steps */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          {/* Step 1 */}
-          <div className="bg-neutral-50 dark:bg-neutral-800 dark:bg-neutral-50 dark:bg-neutral-800 rounded-lg p-6 text-center">
-            <div className="text-3xl font-black text-brand-red mb-4">1</div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Add Accounts</h3>
-            <p className="text-gray-900 dark:text-white mb-4 text-sm">
-              Create accounts for your assets, liabilities, and equity.
-            </p>
-            <Link
-              href="/add-account"
-              className="bg-brand-red hover:bg-brand-red-dark text-white px-4 py-2 rounded-md text-sm font-medium transition-colors inline-block"
-            >
-              Add Your First Account
-            </Link>
-          </div>
-
-          {/* Step 2 */}
-          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6 text-center">
-            <div className="text-3xl font-black text-brand-red mb-4">2</div>
-            <h3 className="text-lg font-semibold text-green-800 dark:text-green-300 mb-3">Record Balances</h3>
-            <p className="text-green-700 dark:text-green-400 mb-4 text-sm">
-              Enter current balances for tracking over time.
-            </p>
-            <Link
-              href="/record-balances"
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors inline-block"
-            >
-              Record Balances
-            </Link>
-          </div>
-
-          {/* Step 3 */}
-          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6 text-center">
-            <div className="text-3xl font-black text-brand-red mb-4">3</div>
-            <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-300 mb-3">Track Progress</h3>
-            <p className="text-purple-700 dark:text-purple-400 mb-4 text-sm">
-              View charts and track your business net value over time.
-            </p>
-            <Link
-              href="/historical"
-              className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors inline-block"
-            >
-              View Tracking
-            </Link>
-          </div>
-        </div>
-
-        {/* Key Features */}
-        <div className="bg-gray-50 dark:bg-neutral-700/50 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-neutral-100 mb-4 text-center uppercase tracking-wider">Key Features</h2>
-          <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-700 dark:text-neutral-300">
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <span className="mr-3 text-brand-red font-bold">✓</span>
-                <span>Complete balance sheet view</span>
-              </div>
-              <div className="flex items-center">
-                <span className="mr-3 text-brand-red font-bold">✓</span>
-                <span>Historical progress tracking</span>
-              </div>
-              <div className="flex items-center">
-                <span className="mr-3 text-brand-red font-bold">✓</span>
-                <span>Multiple account categories</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <span className="mr-3 text-brand-red font-bold">✓</span>
-                <span>Complete privacy & security</span>
-              </div>
-              <div className="flex items-center">
-                <span className="mr-3 text-brand-red font-bold">✓</span>
-                <span>Easy data export/import</span>
-              </div>
-              <div className="flex items-center">
-                <span className="mr-3 text-brand-red font-bold">✓</span>
-                <span>Mobile-friendly design</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Important Notice */}
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-8">
-          <div className="flex items-start">
-            <span className="text-lg mr-2 font-bold text-yellow-600">Info:</span>
-            <div>
-              <h3 className="font-medium text-yellow-800 dark:text-yellow-300 mb-1">Important:</h3>
-              <p className="text-yellow-700 dark:text-yellow-400 text-sm">
-                All your data is stored locally in this browser. Make sure to export your data regularly
-                from the Settings page to prevent data loss if you clear your browser data.
-              </p>
-            </div>
-          </div>
+        {/* Role Recognition Banner */}
+        <div className="bg-neutral-50 dark:bg-neutral-700/30 border border-neutral-200 dark:border-neutral-600 rounded-3xl p-8 mb-12 text-center shadow-sm">
+          <div className="text-4xl mb-4">🏦</div>
+          <h2 className="text-2xl font-black text-gray-800 dark:text-neutral-100 uppercase tracking-tight">Enterprise Financial Management</h2>
+          <p className="text-gray-600 dark:text-neutral-400 mt-2 max-w-xl mx-auto leading-relaxed">
+            Role-based access ensures your data is handled securely. Managers can record operations 
+            while investors receive real-time performance insights.
+          </p>
         </div>
 
         {/* Action Buttons */}

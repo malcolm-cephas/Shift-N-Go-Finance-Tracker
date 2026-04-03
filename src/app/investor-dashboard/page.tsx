@@ -5,7 +5,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function InvestorDashboardPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'INVESTOR']}>
       <div className="max-w-6xl mx-auto py-8">
         <InvestorOverview />
       </div>

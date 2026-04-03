@@ -77,9 +77,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     getUserCloudData()
         .then((res: { accounts: Account[]; balances: Balance[]; transactions: Transaction[] } | null) => {
 
-          if (res === null) {
-            allowCloudSync(false);
-          } else {
+          if (res !== null) {
             setAccounts(res.accounts);
             setBalances(res.balances.map(b => ({ ...b, date: new Date(b.date) })));
             setTransactions(res.transactions.map(t => ({ ...t, date: new Date(t.date) })));
@@ -87,7 +85,6 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
             localStorage.setItem('finance-accounts', JSON.stringify(res.accounts));
             localStorage.setItem('finance-balances', JSON.stringify(res.balances));
             localStorage.setItem('finance-transactions', JSON.stringify(res.transactions));
-            allowCloudSync(true);
           }
         })
         .catch((error) => {

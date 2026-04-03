@@ -5,7 +5,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function HistoricalPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'INVESTOR']}>
       <div>
         <HistoricalTracking />
       </div>

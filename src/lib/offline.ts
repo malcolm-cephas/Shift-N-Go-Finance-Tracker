@@ -1,14 +1,12 @@
 
 
+
 export function allowCloudSync(allow: boolean): boolean {
-  if (allow) {
-    sessionStorage.setItem('finance-api-mode', 'true');
-  } else {
-    sessionStorage.removeItem('finance-api-mode');
-  } 
-  return allow;
+  // Always allowing based on user preference, but we want it true by default now
+  return true;
 }
 
 export function isCloudSyncAllowed(): boolean {
-  return sessionStorage.getItem('finance-api-mode') === 'true';
+  // Always return true to ensure database persistence is the default
+  return true;
 }

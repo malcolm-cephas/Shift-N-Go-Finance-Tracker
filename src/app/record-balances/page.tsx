@@ -5,7 +5,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function RecordBalancesPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER']}>
       <div>
         <RecordBalances />
       </div>

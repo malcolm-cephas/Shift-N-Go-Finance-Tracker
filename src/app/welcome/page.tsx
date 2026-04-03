@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-const WelcomePage = () => {
+export const WelcomePage = () => {
   return (
     <div className="min-h-screen">
       <div className="max-w-4xl mx-auto p-6">
@@ -8,26 +8,22 @@ const WelcomePage = () => {
           {/* Hero Section */}
           <div className="text-center mb-8">
             <div className="text-6xl mb-4">📈</div>
-            <h1 className="text-4xl font-bold text-gray-800 dark:text-neutral-200 mb-4">Welcome to Personal Finance Tracker</h1>
-            <p className="text-xl text-gray-600 dark:text-neutral-400 max-w-2xl mx-auto">
-              Take control of your finances with a simple, private, and secure balance sheet tracker
-              that keeps all your data local to your browser.
+            <h1 className="text-4xl font-extrabold text-gray-900 dark:text-neutral-100 mb-4 tracking-tight uppercase">Shift N Go Financial Intelligence</h1>
+            <p className="text-xl text-gray-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
+              Real-time financial tracking for pre-owned car dealerships. 
+              Secure cloud-persistent data with role-based access for managers and investors.
             </p>
           </div>
 
-          {/* Privacy Banner */}
-          <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-md p-6 mb-8">
-            <div className="flex items-center justify-center">
-              <div className="flex-shrink-0">
-                <span className="text-2xl mr-3">🔒</span>
-              </div>
-              <div className="text-center">
-                <h2 className="text-lg font-medium text-green-800 dark:text-green-300">100% Private & Secure</h2>
-                <p className="mt-1 text-green-700 dark:text-green-400">
-                  Your financial data stays on your device. No servers, no accounts, no data sharing.
-                </p>
-              </div>
-            </div>
+          {/* Progress Indicator */}
+          <div className="bg-neutral-50 dark:bg-neutral-700/30 border border-neutral-200 dark:border-neutral-700 rounded-3xl p-12 mb-12 text-center shadow-xl">
+            <div className="text-5xl mb-6">👔</div>
+            <h2 className="text-3xl font-black text-gray-800 dark:text-neutral-100 uppercase tracking-tight">Enterprise Visibility</h2>
+            <p className="text-gray-600 dark:text-neutral-400 mt-4 max-w-2xl mx-auto text-lg leading-relaxed">
+              Your financial data is securely synchronized across all your devices. 
+              Admins and Managers can record transactions, while Investors have 
+              read-only access to progress reports.
+            </p>
           </div>
 
           {/* Getting Started Steps */}
@@ -122,8 +118,8 @@ const WelcomePage = () => {
                 <div className="flex items-start">
                   <span className="text-2xl mr-3 mt-1">🔒</span>
                   <div>
-                    <h3 className="font-semibold text-gray-800 dark:text-neutral-200">Complete Privacy</h3>
-                    <p className="text-gray-600 dark:text-neutral-400">All data stored locally - no servers, no tracking, no accounts</p>
+                    <h3 className="font-semibold text-gray-800 dark:text-neutral-200">Secure Database</h3>
+                    <p className="text-gray-600 dark:text-neutral-400">All data is backed up and persistent in your business database.</p>
                   </div>
                 </div>
                 <div className="flex items-start">
@@ -175,26 +171,22 @@ const WelcomePage = () => {
             </div>
           </section>
 
-          {/* Important Tips */}
+          {/* Operating Notes */}
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 dark:text-neutral-200 mb-6 text-center">💡 Important Tips</h2>
-            <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-md p-6">
-              <ul className="space-y-3 text-yellow-800 dark:text-yellow-300">
-                <li className="flex items-start">
-                  <span className="font-bold mr-2">💾</span>
-                  <span><strong>Regular Backups:</strong> Export your data regularly using the Settings page to prevent data loss.</span>
+            <h2 className="text-2xl font-semibold text-gray-800 dark:text-neutral-200 mb-6 text-center">💡 Operating Notes</h2>
+            <div className="bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 rounded-3xl p-8">
+              <ul className="space-y-4 text-gray-700 dark:text-neutral-300">
+                <li className="flex items-center">
+                  <span className="text-2xl mr-4">☁️</span>
+                  <span><strong>Automatic Sync:</strong> Your financial updates are saved instantly to the secure database.</span>
                 </li>
-                <li className="flex items-start">
-                  <span className="font-bold mr-2">🔄</span>
-                  <span><strong>Update Regularly:</strong> Record new balances monthly or quarterly to track your progress.</span>
+                <li className="flex items-center">
+                  <span className="text-2xl mr-4">🛡️</span>
+                  <span><strong>Role Protection:</strong> Investors can only view reports, preventing accidental data modification.</span>
                 </li>
-                <li className="flex items-start">
-                  <span className="font-bold mr-2">🎯</span>
-                  <span><strong>Be Accurate:</strong> Use actual account balances for the most useful financial picture.</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="font-bold mr-2">📱</span>
-                  <span><strong>Browser Specific:</strong> Data is tied to this specific browser - bookmark this site!</span>
+                <li className="flex items-center">
+                  <span className="text-2xl mr-4">🎯</span>
+                  <span><strong>Data Accuracy:</strong> Managers should ensure balances match physical inventory for accurate investor reports.</span>
                 </li>
               </ul>
             </div>
