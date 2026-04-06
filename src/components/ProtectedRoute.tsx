@@ -3,7 +3,7 @@
 import { ReactNode, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import LoginPage from './LoginPage';
-import { WelcomePage as WelcomeScreen } from '@/app/welcome/page';
+import WelcomeScreen from '@/app/welcome/page';
 import Link from 'next/link';
 
 interface ProtectedRouteProps {

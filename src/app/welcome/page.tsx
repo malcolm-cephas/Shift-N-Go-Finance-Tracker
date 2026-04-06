@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-export const WelcomePage = () => {
+const WelcomePage = () => {
   return (
     <div className="min-h-screen">
       <div className="max-w-4xl mx-auto p-6">
