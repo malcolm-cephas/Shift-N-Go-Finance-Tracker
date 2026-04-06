@@ -12,7 +12,7 @@ export function CloudSyncToggle() {
   const { triggerCloudSync, triggerRemoveCloudData } = useFinance();
 
   const onToggle = async (newState: boolean) => {
-    allowCloudSync(newState);
+    allowCloudSync();
 
     // Sync the cloud or delete cloud data depending on new state
 
