@@ -33,7 +33,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
       } else {
         alert('Failed to claim ownership. Someone else may have already claimed it.');
       }
-    } catch (_error) {
+    } catch {
       alert('Network error during initialization');
     } finally {
       setIsClaiming(false);

@@ -3,7 +3,6 @@
 import { useState, type ChangeEvent } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
-import { useAuth } from '@/context/AuthContext';
 import { CurrencySelector } from './CurrencySelector';
 import { ThemeToggle } from './ThemeToggle';
 import { ConfirmationModal } from './ui/ConfirmationModal';
