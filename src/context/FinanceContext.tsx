@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Account, Balance, Transaction, AccountWithBalance, AccountWithHistory } from '@/types/finance';
-import { allowCloudSync, isCloudSyncAllowed } from '@/lib/offline';
+import { isCloudSyncAllowed } from '@/lib/offline';
 
 interface FinanceContextType {
   accounts: Account[];
@@ -340,17 +340,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return false;
       }
 
-      const importedAccounts = data.accounts.map((acc: any) => ({
+      const importedAccounts = data.accounts.map((acc: Account) => ({
         ...acc,
         createdAt: new Date(acc.createdAt)
       }));
 
-      const importedBalances = data.balances.map((bal: any) => ({
+      const importedBalances = data.balances.map((bal: Balance) => ({
         ...bal,
         date: new Date(bal.date)
       }));
 
-      const importedTransactions = (data.transactions || []).map((tx: any) => ({
+      const importedTransactions = (data.transactions || []).map((tx: Transaction) => ({
         ...tx,
         date: new Date(tx.date)
       }));

@@ -1,9 +1,9 @@
 'use client';
 
-import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
 import { useUser, Auth0Provider } from '@auth0/nextjs-auth0';
 import { isAuth0ConfiguredClient } from '@/lib/auth0-client';
-import { getUserRole, type UserRole } from '@/lib/roles';
+import { type UserRole } from '@/lib/roles';
 
 interface AuthContextType {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,7 +42,7 @@ function AuthContextWrapper({ children }: { children: ReactNode }) {
   const [canClaim, setCanClaim] = useState(false);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
 
-  async function fetchRole() {
+  const fetchRole = useCallback(async () => {
     if (user) {
       try {
         const res = await fetch('/api/users/me');
@@ -58,13 +58,13 @@ function AuthContextWrapper({ children }: { children: ReactNode }) {
     } else {
       setIsRoleLoading(false);
     }
-  }
+  }, [user]);
 
   useEffect(() => {
     if (!isAuthLoading) {
       fetchRole();
     }
-  }, [user, isAuthLoading]);
+  }, [isAuthLoading, fetchRole]);
 
   const isLoading = isAuthLoading || isRoleLoading;
 

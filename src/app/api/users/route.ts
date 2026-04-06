@@ -28,7 +28,7 @@ export async function GET() {
     await dbConnect();
     const users = await User.find({}).sort({ addedAt: -1 });
     return NextResponse.json(users);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
   }
 }
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     );
 
     return NextResponse.json(user);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to manage user' }, { status: 500 });
   }
 }
@@ -80,7 +80,7 @@ export async function DELETE(request: Request) {
     await User.deleteOne({ email: email.toLowerCase() });
 
     return NextResponse.json({ message: 'User removed' });
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to remove user' }, { status: 500 });
   }
 }

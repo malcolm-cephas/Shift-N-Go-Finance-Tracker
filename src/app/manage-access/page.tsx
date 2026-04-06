@@ -30,7 +30,7 @@ export default function ManageAccessPage() {
         const data = await res.json();
         setUsers(data);
       }
-    } catch (error) {
+    } catch (_error) {
       console.error('Failed to fetch users');
     } finally {
       setIsLoading(false);
@@ -57,7 +57,7 @@ export default function ManageAccessPage() {
         const data = await res.json();
         setStatus({ type: 'error', message: data.error || 'Failed to add user' });
       }
-    } catch (error) {
+    } catch (_error) {
       setStatus({ type: 'error', message: 'Network error' });
     }
   }
@@ -75,7 +75,7 @@ export default function ManageAccessPage() {
       if (res.ok) {
         fetchUsers();
       }
-    } catch (error) {
+    } catch (_error) {
       alert('Failed to revoke access');
     }
   }

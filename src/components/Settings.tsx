@@ -5,7 +5,6 @@ import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
 import { CurrencySelector } from './CurrencySelector';
-import { CloudSyncToggle } from './CloudSyncToggle';
 import { ThemeToggle } from './ThemeToggle';
 import { ConfirmationModal } from './ui/ConfirmationModal';
 
@@ -18,7 +17,6 @@ const Settings = () => {
     clearAllData
   } = useFinance();
   const { selectedCurrency } = useCurrency();
-  const { isAuthConfigured } = useAuth();
 
   const [importFile, setImportFile] = useState<File | null>(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);

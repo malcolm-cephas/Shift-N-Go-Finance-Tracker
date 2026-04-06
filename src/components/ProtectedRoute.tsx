@@ -4,6 +4,7 @@ import { ReactNode, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import LoginPage from './LoginPage';
 import { WelcomePage as WelcomeScreen } from '@/app/welcome/page';
+import Link from 'next/link';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -32,7 +33,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
       } else {
         alert('Failed to claim ownership. Someone else may have already claimed it.');
       }
-    } catch (error) {
+    } catch (_error) {
       alert('Network error during initialization');
     } finally {
       setIsClaiming(false);
@@ -97,9 +98,9 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
             Your current role (**{role}**) does not have permission to access this dealership unit.
           </p>
           <div className="flex flex-col gap-3">
-            <a href="/" className="bg-neutral-800 text-white font-bold py-3 rounded-xl hover:bg-neutral-700 transition-colors">
+            <Link href="/" className="bg-neutral-800 text-white font-bold py-3 rounded-xl hover:bg-neutral-700 transition-colors">
               Return to Summary
-            </a>
+            </Link>
             <a href="/auth/logout" className="text-brand-red font-bold py-2 hover:underline">
               Sign in with different account
             </a>

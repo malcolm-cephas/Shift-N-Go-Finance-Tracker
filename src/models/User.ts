@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import { UserRole } from '@/lib/roles';
 
 const userSchema = new mongoose.Schema({
   email: {

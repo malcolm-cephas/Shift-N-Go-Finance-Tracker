@@ -1,7 +1,7 @@
 
 
 
-export function allowCloudSync(allow: boolean): boolean {
+export function allowCloudSync(_allow: boolean): boolean {
   // Always allowing based on user preference, but we want it true by default now
   return true;
 }
