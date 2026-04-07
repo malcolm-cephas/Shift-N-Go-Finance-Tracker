@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -51,6 +51,11 @@ export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChar
 
   const textColor = isDark ? '#e5e5e5' : '#374151';
   const gridColor = isDark ? 'rgba(163, 163, 163, 0.3)' : 'rgba(0, 0, 0, 0.1)';
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const netWorthData = useMemo(() => {
     // Get all unique dates from balances
@@ -201,6 +206,8 @@ export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChar
   const netWorthChangePercent = firstData.netWorth !== 0
     ? ((latestData.netWorth - firstData.netWorth) / Math.abs(firstData.netWorth)) * 100
     : 0;
+
+  if (!mounted) return null;
 
   return (
     <div className="space-y-6">

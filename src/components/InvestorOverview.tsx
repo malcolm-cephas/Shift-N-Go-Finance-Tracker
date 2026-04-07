@@ -65,6 +65,8 @@ export const InvestorOverview = () => {
         document.title = originalTitle;
     };
 
+    if (!mounted) return null;
+
     return (
         <div className="max-w-6xl mx-auto space-y-8 p-0 md:p-8 bg-white dark:bg-neutral-800 rounded-xl shadow-xl border dark:border-neutral-700 print:shadow-none print:border-none print:p-0">
             {/* Print-Only Professional Header */}
