@@ -43,3 +43,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Sample data
+investor_deal.json
+week_2.csv
+bank_test_data.csv
+test_inr_statement.csv
+test_standard_cars.csv
+test_statement.csv
