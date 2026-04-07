@@ -17,7 +17,7 @@ interface FinanceContextType {
   getAccountsWithHistory: () => AccountWithHistory[];
   deleteAccount: (accountId: string) => void;
   updateAccount: (accountId: string, updates: Pick<Account, 'name' | 'category' | 'type'>) => void;
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'date'>) => void;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'date'> & { date?: Date }) => void;
   deleteTransaction: (transactionId: string) => void;
   exportData: () => string;
   importData: (jsonData: string) => boolean;
@@ -208,11 +208,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   };
 
-  const addTransaction = (transactionData: Omit<Transaction, 'id' | 'date'>) => {
+  const addTransaction = (transactionData: Omit<Transaction, 'id' | 'date'> & { date?: Date }) => {
     const newTransaction: Transaction = {
       ...transactionData,
       id: crypto.randomUUID(),
-      date: new Date(),
+      date: transactionData.date || new Date(),
     };
     setTransactions(prev => [...prev, newTransaction]);
 

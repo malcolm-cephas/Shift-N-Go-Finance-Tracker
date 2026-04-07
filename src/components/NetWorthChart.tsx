@@ -153,7 +153,7 @@ export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChar
       },
       tooltip: {
         callbacks: {
-          label: function (context: TooltipItem<'line'>) {
+          label: function (context: any) {
             const y = context.parsed.y;
             return y == null ? 'Balance: N/A' : `Balance: ${formatCurrency(y)}`;
           },
@@ -209,33 +209,33 @@ export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChar
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-neutral-50 dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 shadow-sm">
           <h3 className="text-xs font-bold text-brand-red uppercase tracking-wider mb-2">Current Business Value</h3>
-          <div className={`text-3xl font-black ${latestData.netWorth >= 0 ? 'text-gray-900 dark:text-white' : 'text-red-600 dark:text-red-400'}`}>
-            {formatCurrency(latestData.netWorth)}
+          <div className={`text-2xl font-black truncate ${latestData.netWorth >= 0 ? 'text-gray-900 dark:text-white' : 'text-red-600 dark:text-red-400'}`}>
+            {new Intl.NumberFormat(selectedCurrency.locale, { style: 'currency', currency: selectedCurrency.code, maximumFractionDigits: 0 }).format(latestData.netWorth)}
           </div>
         </div>
 
         <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
           <h3 className="font-semibold text-green-800 dark:text-green-300 mb-2">Total Assets</h3>
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-            {formatCurrency(latestData.assets)}
+          <div className="text-xl font-bold text-green-600 dark:text-green-400 truncate">
+            {new Intl.NumberFormat(selectedCurrency.locale, { style: 'currency', currency: selectedCurrency.code, maximumFractionDigits: 0 }).format(latestData.assets)}
           </div>
         </div>
 
         <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border border-red-200 dark:border-red-800">
           <h3 className="font-semibold text-red-800 dark:text-red-300 mb-2">Total Liabilities</h3>
-          <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-            {formatCurrency(latestData.liabilities)}
+          <div className="text-xl font-bold text-red-600 dark:text-red-400 truncate">
+            {new Intl.NumberFormat(selectedCurrency.locale, { style: 'currency', currency: selectedCurrency.code, maximumFractionDigits: 0 }).format(latestData.liabilities)}
           </div>
         </div>
 
         <div className="bg-gray-50 dark:bg-neutral-700/50 rounded-lg p-4 border border-gray-200 dark:border-neutral-600">
           <h3 className="font-semibold text-gray-800 dark:text-neutral-200 mb-2">Change</h3>
-          <div className={`text-lg font-bold ${netWorthChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+          <div className={`text-lg font-bold flex flex-col ${netWorthChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
-            <div>{formatCurrency(netWorthChange)}</div>
-            <div className="text-sm">
+            <span className="truncate">{new Intl.NumberFormat(selectedCurrency.locale, { style: 'currency', currency: selectedCurrency.code, maximumFractionDigits: 0 }).format(netWorthChange)}</span>
+            <span className="text-xs">
               ({netWorthChange >= 0 ? '+' : ''}{netWorthChangePercent.toFixed(1)}%)
-            </div>
+            </span>
           </div>
         </div>
       </div>
