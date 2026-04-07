@@ -170,7 +170,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addAccount = (accountData: Omit<Account, 'id' | 'createdAt'>) => {
     const newAccount: Account = {
       ...accountData,
-      id: crypto.randomUUID(),
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
       createdAt: new Date(),
     };
     setAccounts(prev => [...prev, newAccount]);
@@ -182,7 +182,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const updateBalance = (accountId: string, amount: number) => {
     const newBalance: Balance = {
-      id: crypto.randomUUID(),
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
       accountId,
       amount,
       date: new Date(),
@@ -211,7 +211,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addTransaction = (transactionData: Omit<Transaction, 'id' | 'date'> & { date?: Date }) => {
     const newTransaction: Transaction = {
       ...transactionData,
-      id: crypto.randomUUID(),
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
       date: transactionData.date || new Date(),
     };
     setTransactions(prev => [...prev, newTransaction]);
@@ -240,7 +240,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const targetDateString = balanceDate.toISOString().split('T')[0];
 
     const newBalances = updates.map(update => ({
-      id: crypto.randomUUID(),
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
       accountId: update.accountId,
       amount: update.amount,
       date: balanceDate,
@@ -280,7 +280,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       const newBalances = entries.map(entry => ({
-        id: crypto.randomUUID(),
+        id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
         accountId: entry.accountId,
         amount: entry.amount,
         date: entry.date,

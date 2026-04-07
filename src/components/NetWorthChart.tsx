@@ -194,9 +194,9 @@ export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChar
     },
   };
 
-  // Calculate summary stats
-  const latestData = netWorthData[netWorthData.length - 1];
-  const firstData = netWorthData[0];
+  // Calculate summary stats with safety guards
+  const latestData = netWorthData.length > 0 ? netWorthData[netWorthData.length - 1] : { netWorth: 0, assets: 0, liabilities: 0 };
+  const firstData = netWorthData.length > 0 ? netWorthData[0] : { netWorth: 0, assets: 0, liabilities: 0 };
   const netWorthChange = latestData.netWorth - firstData.netWorth;
   const netWorthChangePercent = firstData.netWorth !== 0
     ? ((latestData.netWorth - firstData.netWorth) / Math.abs(firstData.netWorth)) * 100
