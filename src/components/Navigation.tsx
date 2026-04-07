@@ -30,6 +30,7 @@ const Navigation = () => {
 
   const analyticsItems = [
     { href: '/investor-dashboard', label: 'Investor Report' },
+    { href: '/transactions', label: 'Master History 📜' },
     { href: '/historical', label: 'Performance Charts' },
   ];
 
@@ -248,6 +249,13 @@ const Navigation = () => {
                         >
                           Privacy
                         </Link>
+                        <Link
+                          href="/terms"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-white transition-colors"
+                          onClick={() => setIsProfileMenuOpen(false)}
+                        >
+                          Terms
+                        </Link>
                         <a
                           href="/auth/logout"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-white transition-colors"
@@ -349,6 +357,13 @@ const Navigation = () => {
                 className="flex items-center px-3 py-3 rounded-md text-base font-medium text-gray-600 hover:bg-white/60"
               >
                 <span>Privacy</span>
+              </Link>
+              <Link
+                href="/terms"
+                onClick={closeMobileMenu}
+                className="flex items-center px-3 py-3 rounded-md text-base font-medium text-gray-600 hover:bg-white/60"
+              >
+                <span>Terms</span>
               </Link>
               {/* Only show logout when Auth0 is configured and user is logged in */}
               {isAuthConfigured && user && (

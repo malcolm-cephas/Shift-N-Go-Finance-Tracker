@@ -1,4 +1,4 @@
-export type UserRole = 'ADMIN' | 'MANAGER' | 'INVESTOR' | 'UNAUTHORIZED';
+export type UserRole = 'ADMIN' | 'MANAGER' | 'INVESTOR' | 'UNAUTHORIZED' | 'PENDING' | 'REJECTED';
 
 // Define typed user structure loosely for email access
 interface UserWithEmail {
@@ -31,6 +31,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   MANAGER: ['CREATE', 'READ', 'UPDATE', 'DELETE', 'VIEW_SETTINGS', 'VIEW_ANALYTICS'],
   INVESTOR: ['READ', 'VIEW_ANALYTICS'],
   UNAUTHORIZED: [],
+  PENDING: [],
+  REJECTED: [],
 };
 
 export function hasPermission(role: UserRole, permission: string): boolean {

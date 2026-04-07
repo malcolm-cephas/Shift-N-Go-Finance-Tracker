@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { TRANSACTION_CATEGORIES } from '@/types/finance';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -12,6 +12,8 @@ export const LogTransactions = () => {
     const { formatCurrency } = useCurrency();
     const { role } = useAuth();
     const isReadOnly = role === 'INVESTOR';
+
+    // Form State
     const [amount, setAmount] = useState<string>('');
     const [type, setType] = useState<'income' | 'expense'>('expense');
     const [category, setCategory] = useState<string>(TRANSACTION_CATEGORIES.expense[0]);
@@ -19,12 +21,22 @@ export const LogTransactions = () => {
     const [description, setDescription] = useState<string>('');
     const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
+    // View State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+    const itemsPerPage = 20;
+
     const formatAppDate = (dateObj: Date) => {
         return dateObj.toLocaleDateString('en-GB', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric'
         });
+    };
+
+    const handleTypeChange = (newType: 'income' | 'expense') => {
+        setType(newType);
+        setCategory(TRANSACTION_CATEGORIES[newType][0]);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -45,10 +57,33 @@ export const LogTransactions = () => {
         setDate(new Date().toISOString().split('T')[0]);
     };
 
-    const handleTypeChange = (newType: 'income' | 'expense') => {
-        setType(newType);
-        setCategory(TRANSACTION_CATEGORIES[newType][0]);
-    };
+    // Filtered and Sorted Logic
+    const filteredTransactions = useMemo(() => {
+        const searchStr = searchTerm.toLowerCase();
+        return transactions.filter(tx => {
+            const accountName = accounts.find(a => a.id === tx.accountId)?.name || '';
+            const txDate = formatAppDate(new Date(tx.date));
+            return (
+                tx.description?.toLowerCase().includes(searchStr) ||
+                tx.category?.toLowerCase().includes(searchStr) ||
+                accountName.toLowerCase().includes(searchStr) ||
+                txDate.includes(searchStr) ||
+                tx.amount.toString().includes(searchStr)
+            );
+        });
+    }, [transactions, searchTerm, accounts]);
+
+    const sortedTransactions = useMemo(() => {
+        return [...filteredTransactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }, [filteredTransactions]);
+
+    const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage);
+    const paginatedTransactions = useMemo(() => {
+        return sortedTransactions.slice(
+            (currentPage - 1) * itemsPerPage,
+            currentPage * itemsPerPage
+        );
+    }, [sortedTransactions, currentPage, itemsPerPage]);
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 text-sm">
@@ -181,7 +216,33 @@ export const LogTransactions = () => {
                 )}
 
                 <div className="mt-10">
-                    <h2 className="text-xl font-bold mb-4 uppercase tracking-tight">Recent Business Logs</h2>
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
+                        <div>
+                            <h2 className="text-xl font-bold uppercase tracking-tight">Recent Business Logs</h2>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Audit Trail & Transaction History</p>
+                        </div>
+                        <div className="flex items-center gap-3 w-full md:w-auto">
+                            <div className="relative flex-1 md:w-64">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                                <input
+                                    type="text"
+                                    placeholder="Search Toyota, Sale, Bank..."
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        setCurrentPage(1); 
+                                    }}
+                                    className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-full text-xs font-medium focus:ring-2 focus:ring-brand-red outline-none transition-all shadow-inner"
+                                />
+                            </div>
+                            {totalPages > 1 && (
+                                <div className="hidden sm:block text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 dark:bg-neutral-700 px-3 py-1.5 rounded-full border dark:border-neutral-600">
+                                    Page {currentPage} of {totalPages}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
                             <thead>
@@ -194,10 +255,10 @@ export const LogTransactions = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y dark:divide-neutral-700">
-                                {transactions.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 50).map(tx => (
+                                {paginatedTransactions.map(tx => (
                                     <tr key={tx.id} className="text-sm">
                                         <td className="py-3 font-semibold text-gray-500">{formatAppDate(new Date(tx.date))}</td>
-                                        <td className="py-3">
+                                        <td className="py-3 text-nowrap">
                                             <div className="font-bold text-gray-800 dark:text-neutral-200">{tx.description || 'General Entry'}</div>
                                             <div className="text-[10px] uppercase font-bold text-gray-400">
                                                 {accounts.find(a => a.id === tx.accountId)?.name}
@@ -227,21 +288,61 @@ export const LogTransactions = () => {
                                         )}
                                     </tr>
                                 ))}
-                                {transactions.length === 0 && (
+                                {filteredTransactions.length === 0 && (
                                     <tr>
                                         <td colSpan={5} className="py-10 text-center text-gray-500 italic">
-                                            No business transactions recorded yet.
+                                            {searchTerm ? `No transactions matching "${searchTerm}"` : 'No business transactions recorded yet.'}
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-between mt-6 pt-6 border-t dark:border-neutral-700">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                className="px-4 py-2 text-xs font-black uppercase tracking-widest border rounded-md disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+                            >
+                                ← Previous
+                            </button>
+                            <div className="flex space-x-1">
+                                {Array.from({ length: totalPages }, (_, i) => {
+                                    const pageNum = i + 1;
+                                    // Only show current page and its neighbors
+                                    if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)) {
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => setCurrentPage(pageNum)}
+                                                className={`w-8 h-8 flex items-center justify-center rounded-md text-[10px] font-bold transition-all ${currentPage === pageNum 
+                                                    ? 'bg-brand-red text-white shadow-lg' 
+                                                    : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-neutral-700'}`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    }
+                                    if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                                        return <span key={pageNum} className="px-1 text-gray-400">...</span>;
+                                    }
+                                    return null;
+                                })}
+                            </div>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                disabled={currentPage === totalPages}
+                                className="px-4 py-2 text-xs font-black uppercase tracking-widest border rounded-md disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-neutral-700 transition-colors"
+                            >
+                                Next →
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
     );
 };
-
-
-

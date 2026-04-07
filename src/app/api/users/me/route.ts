@@ -27,6 +27,16 @@ export async function GET() {
       return NextResponse.json({ role: dbUser.role, email, name: dbUser.name });
     }
 
+    // GATEKEEPER MODE: Auto-create a PENDING entry for unknown users
+    if (session.user && userCount > 0) {
+      const pendingUser = await User.create({
+        email,
+        name: session.user.name || 'Unknown Log-in Attempt',
+        role: 'PENDING'
+      });
+      return NextResponse.json({ role: 'PENDING', email, name: pendingUser.name });
+    }
+
     return NextResponse.json({ role: 'UNAUTHORIZED', email, canClaim: false });
   } catch (error) {
     console.error('Error fetching user role:', error);

@@ -110,6 +110,38 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     );
   }
 
+  // PENDING APPROVAL CASE
+  if (role === 'PENDING' || role === 'REJECTED') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-neutral-50 dark:bg-neutral-950">
+        <div className="max-w-md w-full bg-white dark:bg-neutral-900 rounded-[2.5rem] shadow-2xl p-10 border border-neutral-100 dark:border-neutral-800 text-center">
+          <div className="text-6xl mb-6">{role === 'REJECTED' ? '🔒' : '⏳'}</div>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tight mb-4">
+            {role === 'REJECTED' ? 'Access Denied' : 'Access Pending'}
+          </h1>
+          <p className="text-neutral-500 dark:text-neutral-400 mb-8 font-medium leading-relaxed">
+            {role === 'REJECTED' 
+              ? 'Your request for dealership access has been rejected by the administrator.' 
+              : 'Your digital identity has been verified. The administrator is currently reviewing your access request for this dealership.'}
+          </p>
+          <div className="bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-2xl mb-8 border dark:border-neutral-700">
+            <p className="text-xs font-black text-neutral-400 uppercase tracking-widest mb-1 text-left">Identity Verified</p>
+            <p className="text-sm font-bold text-gray-800 dark:text-neutral-200 text-left truncate">{user?.email}</p>
+          </div>
+          <Link 
+            href="/api/auth/logout"
+            className="block w-full bg-neutral-900 text-white font-black py-4 rounded-2xl shadow-xl transition-all active:scale-[0.98]"
+          >
+            SIGN OUT
+          </Link>
+          <p className="mt-6 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+            Shift N Go Security Center
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 };
 

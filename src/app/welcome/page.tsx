@@ -210,7 +210,13 @@ const WelcomePage = () => {
               href="/disclaimer"
               className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-md font-medium transition-colors text-center"
             >
-              📋 Read Disclaimer
+              📋 Privacy Charter
+            </Link>
+            <Link
+              href="/terms"
+              className="bg-neutral-800 hover:bg-neutral-900 text-white px-6 py-3 rounded-md font-medium transition-colors text-center"
+            >
+              ⚖️ Legal Terms
             </Link>
           </div>
         </div>
