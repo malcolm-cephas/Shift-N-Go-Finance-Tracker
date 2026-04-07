@@ -10,7 +10,6 @@ import {
   Tooltip,
   Legend,
   TimeScale,
-  TooltipItem,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import 'chartjs-adapter-date-fns';
@@ -90,7 +89,7 @@ export const BalanceChart = ({ account, balances, height = 400 }: BalanceChartPr
       },
       tooltip: {
         callbacks: {
-          label: function (context: TooltipItem<'line'>) {
+          label: function (context: any) {
             const y = context.parsed.y;
             return y == null ? 'Balance: N/A' : `Balance: ${formatCurrency(y)}`;
           },

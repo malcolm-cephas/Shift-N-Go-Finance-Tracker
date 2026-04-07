@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export const SpinningTyre = () => {
     return (
-        <div className="fixed bottom-6 left-6 z-[9999] group cursor-pointer">
+        <div className="fixed bottom-6 left-6 z-[9999] group cursor-pointer print:hidden">
             <Link href="/" className="relative block">
                 {/* Outer Glow */}
                 <div className="absolute inset-0 bg-neutral-50 dark:bg-neutral-8000/20 rounded-full blur-xl scale-125 animate-pulse"></div>
