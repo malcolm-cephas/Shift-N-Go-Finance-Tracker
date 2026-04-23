@@ -12,7 +12,6 @@ const DisclaimerPage = () => {
                 {/* Main Header Card */}
                 <div className="bg-white dark:bg-neutral-900 rounded-[3rem] shadow-2xl p-10 md:p-16 border border-neutral-100 dark:border-neutral-800 text-center relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-red via-red-500 to-brand-red"></div>
-                    <div className="text-6xl mb-8 drop-shadow-xl">📜</div>
                     <h1 className="text-5xl font-black text-gray-900 dark:text-white uppercase tracking-tighter mb-4">
                         Security & Privacy <br/> <span className="text-brand-red">Charter</span>
                     </h1>
@@ -22,19 +21,17 @@ const DisclaimerPage = () => {
                 {/* The Gatekeeper Commitment */}
                 <div className="grid md:grid-cols-2 gap-8">
                     <div className="bg-red-50/50 dark:bg-red-950/10 border border-red-100 dark:border-red-900/50 p-8 rounded-[2.5rem] relative overflow-hidden group">
-                        <div className="absolute -right-4 -bottom-4 text-8xl grayscale opacity-5 group-hover:opacity-10 transition-opacity">🔐</div>
                         <h2 className="text-xl font-black text-red-700 dark:text-red-400 uppercase tracking-tighter mb-4 flex items-center gap-3">
-                            <span>🛡️</span> The Gatekeeper
+                            The Gatekeeper
                         </h2>
                         <p className="text-sm font-medium text-red-900/70 dark:text-red-300/70 leading-relaxed">
-                            Access to this financial tracker is <strong>Strictly Whitelist-Only</strong>. Every digital identity that reaches our login gate is automatically held in a "Pending" lobby. No data is revealed until the <strong>Founder</strong> manually verifies and assigns an official dealership role.
+                            Access to this financial tracker is <strong>Strictly Whitelist-Only</strong>. Every digital identity that reaches our login gate is automatically held in a &quot;Pending&quot; lobby. No data is revealed until the <strong>Founder</strong> manually verifies and assigns an official dealership role.
                         </p>
                     </div>
 
                     <div className="bg-neutral-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden group">
-                        <div className="absolute -right-4 -bottom-4 text-8xl opacity-10 group-hover:opacity-20 transition-opacity">📈</div>
                         <h2 className="text-xl font-black text-white uppercase tracking-tighter mb-4 flex items-center gap-3">
-                            <span>⚖️</span> Role Integrity
+                            Role Integrity
                         </h2>
                         <p className="text-sm font-medium text-neutral-400 leading-relaxed">
                             Our system enforces strict <strong>Role-Based Access Control (RBAC)</strong>. Investors can only audit performance, while Managers handle dealership operations. Only the Founder possesses the keys to the Master Security Registry.
@@ -50,7 +47,7 @@ const DisclaimerPage = () => {
                            <h3 className="text-xs font-black text-neutral-400 uppercase tracking-[0.4em] mb-6 border-b border-dashed dark:border-neutral-800 pb-2">Digital Identification</h3>
                            <div className="grid md:grid-cols-2 gap-10">
                                <div>
-                                   <h4 className="font-black text-gray-900 dark:text-white uppercase text-sm mb-3">Google One-Tap OAuth 🔐</h4>
+                                   <h4 className="font-black text-gray-900 dark:text-white uppercase text-sm mb-3">Google One-Tap OAuth</h4>
                                    <p className="text-sm text-neutral-500 font-medium leading-relaxed">
                                        We utilize <strong>Auth0 Enterprise Infrastructure</strong> for all identity management. For maximum security and verified audit trails, we exclusively integrate with <strong>Google OAuth</strong>. We never see, touch, or store your passwords.
                                    </p>
@@ -58,7 +55,7 @@ const DisclaimerPage = () => {
                                <ul className="space-y-3">
                                    {['Industry-standard encryption', 'Verified Google Identity Layer', 'One-Click Secure Entry', 'No password storage on server'].map(item => (
                                        <li key={item} className="flex items-center gap-3 text-xs font-bold text-gray-700 dark:text-neutral-300">
-                                           <span className="text-brand-red">✓</span> {item}
+                                           <span className="text-brand-red">•</span> {item}
                                        </li>
                                    ))}
                                </ul>
@@ -70,13 +67,13 @@ const DisclaimerPage = () => {
                            <h3 className="text-xs font-black text-neutral-400 uppercase tracking-[0.4em] mb-6 border-b border-dashed dark:border-neutral-800 pb-2">Data Sovereignty</h3>
                            <div className="grid md:grid-cols-2 gap-10">
                                <div className="bg-neutral-50 dark:bg-neutral-800/50 p-6 rounded-3xl border dark:border-neutral-800">
-                                   <h4 className="font-black text-gray-900 dark:text-white uppercase text-xs mb-3">🏠 Browser Residency</h4>
+                                   <h4 className="font-black text-gray-900 dark:text-white uppercase text-xs mb-3">Browser Residency</h4>
                                    <p className="text-[11px] text-neutral-500 font-bold leading-relaxed">
                                        By default, your dealership logs live within your browser&apos;s local memory. Maximum privacy—your data never leaves your machine unless you choose to activate the Cloud Audit Sync.
                                    </p>
                                </div>
                                <div className="bg-neutral-50 dark:bg-neutral-800/50 p-6 rounded-3xl border dark:border-neutral-800">
-                                   <h4 className="font-black text-gray-900 dark:text-white uppercase text-xs mb-3">☁️ Encrypted Cloud Sync</h4>
+                                   <h4 className="font-black text-gray-900 dark:text-white uppercase text-xs mb-3">Encrypted Cloud Sync</h4>
                                    <p className="text-[11px] text-neutral-500 font-bold leading-relaxed">
                                        When sync is enabled, your data is mirrored to our <strong>MongoDB Enterprise Database</strong> (Hosted on AWS). Every bit is encrypted in transit and at rest.
                                    </p>

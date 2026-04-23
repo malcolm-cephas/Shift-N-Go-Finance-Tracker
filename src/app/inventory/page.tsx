@@ -1,17 +1,14 @@
 'use client';
 
-import { LogTransactions } from '@/components/LogTransactions';
+import { InventoryManager } from '@/components/InventoryManager';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
-export default function LogExpensesPage() {
+export default function InventoryPage() {
   return (
     <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'INVESTOR']}>
-      <div>
-        <LogTransactions />
+      <div className="py-8">
+        <InventoryManager />
       </div>
     </ProtectedRoute>
   );
 }
-
-
-

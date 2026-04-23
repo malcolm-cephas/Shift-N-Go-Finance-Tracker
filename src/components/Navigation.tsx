@@ -19,6 +19,7 @@ const Navigation = () => {
   const isAdminOrManager = role === 'ADMIN' || role === 'MANAGER';
 
   const inventoryItems = [
+    { href: '/inventory', label: 'Unit Inventory' },
     { href: '/add-account', label: 'Business Units' },
     { href: '/record-balances', label: 'Inventory Balances' },
   ];
@@ -30,7 +31,8 @@ const Navigation = () => {
 
   const analyticsItems = [
     { href: '/investor-dashboard', label: 'Investor Report' },
-    { href: '/transactions', label: 'Master History 📜' },
+    { href: '/inventory', label: 'Unit Portfolio' },
+    { href: '/transactions', label: 'Master History' },
     { href: '/historical', label: 'Performance Charts' },
   ];
 
@@ -239,7 +241,7 @@ const Navigation = () => {
                             className="block px-4 py-2 text-sm text-brand-red font-black hover:bg-white transition-colors"
                             onClick={() => setIsProfileMenuOpen(false)}
                           >
-                            Manage Access 🔐
+                            Manage Access
                           </Link>
                         )}
                         <Link

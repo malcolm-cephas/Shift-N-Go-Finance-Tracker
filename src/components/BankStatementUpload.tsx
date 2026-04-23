@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useAuth } from '@/context/AuthContext';
 
 const MAX_PREVIEW_ROWS = 8;
 
@@ -186,6 +187,8 @@ const detectColumnIndex = (labels: string[], matchers: string[]) => {
 export const BankStatementUpload: React.FC = () => {
   const { accounts, balances, importBalances } = useFinance();
   const { formatCurrency } = useCurrency();
+  const { role } = useAuth();
+  const isReadOnly = role === 'INVESTOR';
   const [fileName, setFileName] = useState('');
   const [rawRows, setRawRows] = useState<string[][]>([]);
   const [hasHeaderRow, setHasHeaderRow] = useState(true);
@@ -741,14 +744,20 @@ export const BankStatementUpload: React.FC = () => {
             </div>
 
             <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={handleImport}
-                disabled={!canImport}
-                className="px-6 py-3 bg-brand-red text-white font-medium rounded-md hover:bg-brand-red-dark focus:outline-none focus:ring-2 focus:ring-brand-red focus:ring-offset-2 dark:focus:ring-offset-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isImporting ? 'Importing...' : 'Import Balances'}
-              </button>
+              {!isReadOnly ? (
+                <button
+                  type="button"
+                  onClick={handleImport}
+                  disabled={!canImport}
+                  className="px-6 py-3 bg-brand-red text-white font-medium rounded-md hover:bg-brand-red-dark focus:outline-none focus:ring-2 focus:ring-brand-red focus:ring-offset-2 dark:focus:ring-offset-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isImporting ? 'Importing...' : 'Import Balances'}
+                </button>
+              ) : (
+                <div className="px-6 py-3 bg-neutral-100 dark:bg-neutral-700 text-gray-400 font-bold rounded-md uppercase tracking-widest text-xs border border-neutral-200 dark:border-neutral-600">
+                  Read Only Mode
+                </div>
+              )}
             </div>
           </div>
         )}

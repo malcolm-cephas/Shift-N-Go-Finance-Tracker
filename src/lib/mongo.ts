@@ -1,4 +1,4 @@
-import { Account, Balance, Transaction } from "@/types/finance";
+import { Account, Balance, Transaction, InventoryItem } from "@/types/finance";
 import { MongoClient } from "mongodb";
 
 let client: MongoClient | null = null;
@@ -14,13 +14,38 @@ function getClient(): MongoClient {
   return client;
 }
 
-export async function getUserCloudData(userId: string): Promise<{ accounts: Account[]; balances: Balance[]; transactions: Transaction[] } | null> {
+const SHARED_DATA_ID = "GLOBAL_DEALERSHIP_DATA";
+
+export async function getUserCloudData(userId: string): Promise<{ accounts: Account[]; balances: Balance[]; transactions: Transaction[]; inventory: InventoryItem[] } | null> {
   const client = getClient();
   await client.connect();
   const db = client.db(process.env.MONGODB_DB_NAME);
-  const userCollection = db.collection<{ userId: string; accounts: Account[]; balances: Balance[]; transactions: Transaction[] }>("user_data");
+  const userCollection = db.collection<{ userId: string; accounts: Account[]; balances: Balance[]; transactions: Transaction[]; inventory: InventoryItem[] }>("user_data");
 
-  const userData = await userCollection.findOne({ userId });
+  // 1. Try to find the shared dealership data
+  let userData = await userCollection.findOne({ userId: SHARED_DATA_ID });
+
+  // 2. MIGRATION LOGIC: If shared data is missing but the requesting user has private data,
+  // promote their data to be the shared dealership data.
+  if (!userData && userId) {
+    const privateData = await userCollection.findOne({ userId });
+    if (privateData) {
+      console.warn(`Migrating private data for user ${userId} to shared dealership storage`);
+      await userCollection.updateOne(
+        { userId: SHARED_DATA_ID },
+        { $set: { 
+            accounts: privateData.accounts, 
+            balances: privateData.balances, 
+            transactions: privateData.transactions,
+            inventory: (privateData as any).inventory || []
+          } 
+        },
+        { upsert: true }
+      );
+      // Fetch it again to be safe
+      userData = await userCollection.findOne({ userId: SHARED_DATA_ID });
+    }
+  }
 
   if (!userData) {
     return null;
@@ -30,28 +55,29 @@ export async function getUserCloudData(userId: string): Promise<{ accounts: Acco
     accounts: userData.accounts || [],
     balances: userData.balances || [],
     transactions: userData.transactions || [],
+    inventory: userData.inventory || [],
   };
 }
 
-export async function saveUserCloudData(userId: string, accounts: Account[], balances: Balance[], transactions: Transaction[]): Promise<void> {
+export async function saveUserCloudData(accounts: Account[], balances: Balance[], transactions: Transaction[], inventory: InventoryItem[]): Promise<void> {
   const client = getClient();
   await client.connect();
   const db = client.db(process.env.MONGODB_DB_NAME);
-  const userCollection = db.collection<{ userId: string; accounts: Account[]; balances: Balance[]; transactions: Transaction[] }>("user_data");
+  const userCollection = db.collection<{ userId: string; accounts: Account[]; balances: Balance[]; transactions: Transaction[]; inventory: InventoryItem[] }>("user_data");
 
   await userCollection.updateOne(
-    { userId },
-    { $set: { accounts, balances, transactions } },
+    { userId: SHARED_DATA_ID },
+    { $set: { accounts, balances, transactions, inventory } },
     { upsert: true }
   );
 }
 
 
-export async function deleteUserCloudData(userId: string): Promise<void> {
+export async function deleteUserCloudData(): Promise<void> {
   const client = getClient();
   await client.connect();
   const db = client.db(process.env.MONGODB_DB_NAME);
   const userCollection = db.collection<{ userId: string; accounts: Account[]; balances: Balance[]; transactions: Transaction[] }>("user_data");
 
-  await userCollection.deleteOne({ userId });
+  await userCollection.deleteOne({ userId: SHARED_DATA_ID });
 }

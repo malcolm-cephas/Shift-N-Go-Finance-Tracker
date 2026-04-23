@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { CurrencySelector } from './CurrencySelector';
 
 export const LogTransactions = () => {
-    const { accounts, transactions, addTransaction, deleteTransaction } = useFinance();
+    const { accounts, transactions, addTransaction, deleteTransaction, inventory } = useFinance();
     const { formatCurrency } = useCurrency();
     const { role } = useAuth();
     const isReadOnly = role === 'INVESTOR';
@@ -18,6 +18,8 @@ export const LogTransactions = () => {
     const [type, setType] = useState<'income' | 'expense'>('expense');
     const [category, setCategory] = useState<string>(TRANSACTION_CATEGORIES.expense[0]);
     const [accountId, setAccountId] = useState<string>(accounts[0]?.id || '');
+    const [vehicleId, setVehicleId] = useState<string>('');
+    const [investorEmail, setInvestorEmail] = useState<string>('');
     const [description, setDescription] = useState<string>('');
     const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
@@ -45,6 +47,8 @@ export const LogTransactions = () => {
 
         addTransaction({
             accountId,
+            vehicleId: vehicleId || undefined,
+            investorEmail: investorEmail || undefined,
             amount: parseFloat(amount),
             type,
             category,
@@ -54,6 +58,8 @@ export const LogTransactions = () => {
 
         setAmount('');
         setDescription('');
+        setVehicleId('');
+        setInvestorEmail('');
         setDate(new Date().toISOString().split('T')[0]);
     };
 
@@ -191,7 +197,7 @@ export const LogTransactions = () => {
                                 </select>
                             </div>
 
-                            <div>
+                            <div className="md:col-span-2">
                                 <label htmlFor="description" className="block text-xs font-bold text-gray-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
                                     Details
                                 </label>
@@ -202,6 +208,37 @@ export const LogTransactions = () => {
                                     onChange={(e) => setDescription(e.target.value)}
                                     className="w-full px-3 py-2 border rounded-md dark:bg-neutral-700 dark:border-neutral-600"
                                     placeholder="e.g. Maruti Swift Service"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="vehicle" className="block text-xs font-bold text-gray-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
+                                    Link to Unit (Inventory)
+                                </label>
+                                <select
+                                    id="vehicle"
+                                    value={vehicleId}
+                                    onChange={(e) => setVehicleId(e.target.value)}
+                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-700 dark:border-neutral-600 font-bold text-brand-red"
+                                >
+                                    <option value="">-- General Expense --</option>
+                                    {inventory.map(item => (
+                                        <option key={item.id} value={item.id}>🚗 {item.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label htmlFor="investor" className="block text-xs font-bold text-gray-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
+                                    Investor Email (For funding)
+                                </label>
+                                <input
+                                    id="investor"
+                                    type="email"
+                                    value={investorEmail}
+                                    onChange={(e) => setInvestorEmail(e.target.value)}
+                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-700 dark:border-neutral-600 font-bold text-blue-600"
+                                    placeholder="investor@example.com"
                                 />
                             </div>
                         </div>
@@ -259,9 +296,19 @@ export const LogTransactions = () => {
                                     <tr key={tx.id} className="text-sm">
                                         <td className="py-3 font-semibold text-gray-500">{formatAppDate(new Date(tx.date))}</td>
                                         <td className="py-3 text-nowrap">
-                                            <div className="font-bold text-gray-800 dark:text-neutral-200">{tx.description || 'General Entry'}</div>
-                                            <div className="text-[10px] uppercase font-bold text-gray-400">
-                                                {accounts.find(a => a.id === tx.accountId)?.name}
+                                            <div className="font-bold text-gray-800 dark:text-neutral-200">
+                                                {tx.description || 'General Entry'}
+                                                {tx.vehicleId && (
+                                                    <span className="ml-2 px-2 py-0.5 bg-neutral-100 dark:bg-neutral-700 text-[10px] font-black text-brand-red rounded-full uppercase italic">
+                                                         {inventory.find(i => i.id === tx.vehicleId)?.name}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="text-[10px] uppercase font-bold text-gray-400 flex flex-wrap gap-2">
+                                                <span>{accounts.find(a => a.id === tx.accountId)?.name}</span>
+                                                {tx.investorEmail && (
+                                                    <span className="text-blue-500 italic">👤 {tx.investorEmail}</span>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="py-3">

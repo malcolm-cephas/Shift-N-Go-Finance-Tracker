@@ -16,6 +16,8 @@ const Settings = () => {
     clearAllData
   } = useFinance();
   const { selectedCurrency } = useCurrency();
+  const { role } = useAuth();
+  const isReadOnly = role === 'INVESTOR';
 
   const [importFile, setImportFile] = useState<File | null>(null);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -194,62 +196,67 @@ const Settings = () => {
         </button>
       </div>
 
-      {/* Import Section */}
-      <div className="bg-gray-50 dark:bg-neutral-700/50 rounded-lg p-6">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-neutral-100 mb-4 uppercase tracking-wider text-brand-red">Import Data</h2>
-        <p className="text-gray-600 dark:text-neutral-400 mb-4">
-          Import financial data from a previously exported backup file. This will replace all current data on your account.
-        </p>
+      {/* Import Section - Hidden for Investors */}
+      {!isReadOnly && (
+        <div className="bg-gray-50 dark:bg-neutral-700/50 rounded-lg p-6">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-neutral-100 mb-4 uppercase tracking-wider text-brand-red">Import Data</h2>
+          <p className="text-gray-600 dark:text-neutral-400 mb-4">
+            Import financial data from a previously exported backup file. This will replace all current data on your account.
+          </p>
 
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="import-file" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
-              Select backup file:
-            </label>
-            <input
-              id="import-file"
-              type="file"
-              accept=".json"
-              onChange={handleFileSelect}
-              className="block w-full text-sm text-gray-500 dark:text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-neutral-50 dark:bg-neutral-800 dark:file:bg-brand-red/30 file:text-brand-red dark:file:text-brand-red hover:file:bg-brand-red dark:hover:file:bg-brand-red/50"
-            />
-          </div>
-
-          {importFile && (
-            <div className="bg-neutral-50 dark:bg-neutral-800 dark:bg-neutral-50 dark:bg-neutral-800 border border-brand-red/20 dark:border-brand-red/20 rounded-md p-3">
-              <p className="text-sm text-gray-900 dark:text-white">
-                <strong>Selected file:</strong> {importFile.name} ({(importFile.size / 1024).toFixed(1)} KB)
-              </p>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="import-file" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-2">
+                Select backup file:
+              </label>
+              <input
+                id="import-file"
+                type="file"
+                accept=".json"
+                onChange={handleFileSelect}
+                className="block w-full text-sm text-gray-500 dark:text-neutral-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-neutral-50 dark:bg-neutral-800 dark:file:bg-brand-red/30 file:text-brand-red dark:file:text-brand-red hover:file:bg-brand-red dark:hover:file:bg-brand-red/50"
+              />
             </div>
-          )}
+
+            {importFile && (
+              <div className="bg-neutral-50 dark:bg-neutral-800 dark:bg-neutral-50 dark:bg-neutral-800 border border-brand-red/20 dark:border-brand-red/20 rounded-md p-3">
+                <p className="text-sm text-gray-900 dark:text-white">
+                  <strong>Selected file:</strong> {importFile.name} ({(importFile.size / 1024).toFixed(1)} KB)
+                </p>
+              </div>
+            )}
+
+            <button
+              onClick={handleImport}
+              disabled={!importFile}
+              className={`px-6 py-3 rounded-md font-medium transition-colors flex items-center space-x-2 ${importFile
+                ? 'bg-green-600 hover:bg-green-700 text-white'
+                : 'bg-gray-300 dark:bg-neutral-600 text-gray-500 dark:text-neutral-400 cursor-not-allowed'
+                }`}
+            >
+              <span>Import Data</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isReadOnly && (
+        <div className="bg-red-50 dark:bg-red-900/10 rounded-lg p-6 border border-red-200 dark:border-red-900/30">
+          <h2 className="text-xl font-bold text-red-800 dark:text-red-400 mb-4 uppercase tracking-wider">Danger Zone</h2>
+          <p className="text-red-700 dark:text-red-300 mb-6">
+            Permanently delete all your financial data. This action cannot be undone.
+          </p>
 
           <button
-            onClick={handleImport}
-            disabled={!importFile}
-            className={`px-6 py-3 rounded-md font-medium transition-colors flex items-center space-x-2 ${importFile
-              ? 'bg-green-600 hover:bg-green-700 text-white'
-              : 'bg-gray-300 dark:bg-neutral-600 text-gray-500 dark:text-neutral-400 cursor-not-allowed'
-              }`}
+            onClick={() => setShowConfirmDelete(true)}
+            className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-[0.98] flex items-center space-x-2 shadow-xl shadow-red-200 dark:shadow-none"
           >
-            <span>Import Data</span>
+            <span>Clear All Data</span>
           </button>
         </div>
-      </div>
+      )}
 
-      <div className="bg-red-50 dark:bg-red-900/10 rounded-lg p-6 border border-red-200 dark:border-red-900/30">
-        <h2 className="text-xl font-bold text-red-800 dark:text-red-400 mb-4 uppercase tracking-wider">Danger Zone</h2>
-        <p className="text-red-700 dark:text-red-300 mb-6">
-          Permanently delete all your financial data. This action cannot be undone.
-        </p>
-
-        <button
-          onClick={() => setShowConfirmDelete(true)}
-          className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-[0.98] flex items-center space-x-2 shadow-xl shadow-red-200 dark:shadow-none"
-        >
-          <span>Clear All Data</span>
-        </button>
-      </div>
-
+      {/* Confirmation Modal - Only accessible to non-investors anyway */}
       <ConfirmationModal
         isOpen={showConfirmDelete}
         onClose={() => setShowConfirmDelete(false)}

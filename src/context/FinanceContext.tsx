@@ -1,13 +1,14 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Account, Balance, Transaction, AccountWithBalance, AccountWithHistory } from '@/types/finance';
+import { Account, Balance, Transaction, InventoryItem, AccountWithBalance, AccountWithHistory } from '@/types/finance';
 import { isCloudSyncAllowed } from '@/lib/offline';
 
 interface FinanceContextType {
   accounts: Account[];
   balances: Balance[];
   transactions: Transaction[];
+  inventory: InventoryItem[];
   isLoading: boolean;
   addAccount: (account: Omit<Account, 'id' | 'createdAt'>) => void;
   updateBalance: (accountId: string, amount: number) => void;
@@ -19,6 +20,9 @@ interface FinanceContextType {
   updateAccount: (accountId: string, updates: Pick<Account, 'name' | 'category' | 'type'>) => void;
   addTransaction: (transaction: Omit<Transaction, 'id' | 'date'> & { date?: Date }) => void;
   deleteTransaction: (transactionId: string) => void;
+  addInventoryItem: (item: Omit<InventoryItem, 'id' | 'createdAt'>) => void;
+  updateInventoryItem: (id: string, updates: Partial<InventoryItem>) => void;
+  deleteInventoryItem: (id: string) => void;
   exportData: () => string;
   importData: (jsonData: string) => boolean;
   clearAllData: () => void;
@@ -40,6 +44,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [balances, setBalances] = useState<Balance[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load data from API on mount
@@ -47,6 +52,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const savedAccounts = localStorage.getItem('finance-accounts');
     const savedBalances = localStorage.getItem('finance-balances');
     const savedTransactions = localStorage.getItem('finance-transactions');
+    const savedInventory = localStorage.getItem('finance-inventory');
 
     if (savedAccounts) {
       const parsedAccounts = JSON.parse(savedAccounts);
@@ -69,22 +75,36 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         date: new Date(tx.date)
       })));
     }
+    if (savedInventory) {
+      const parsedInventory = JSON.parse(savedInventory);
+      setInventory(parsedInventory.map((item: InventoryItem) => ({
+        ...item,
+        createdAt: new Date(item.createdAt),
+        soldAt: item.soldAt ? new Date(item.soldAt) : undefined
+      })));
+    }
 
     if (!isCloudSyncAllowed()) {
       setIsLoading(false);
       return;
     }
     getUserCloudData()
-        .then((res: { accounts: Account[]; balances: Balance[]; transactions: Transaction[] } | null) => {
+        .then((res: { accounts: Account[]; balances: Balance[]; transactions: Transaction[]; inventory: InventoryItem[] } | null) => {
 
           if (res !== null) {
             setAccounts(res.accounts);
             setBalances(res.balances.map(b => ({ ...b, date: new Date(b.date) })));
             setTransactions(res.transactions.map(t => ({ ...t, date: new Date(t.date) })));
+            setInventory((res.inventory || []).map(i => ({ 
+              ...i, 
+              createdAt: new Date(i.createdAt),
+              soldAt: i.soldAt ? new Date(i.soldAt) : undefined 
+            })));
 
             localStorage.setItem('finance-accounts', JSON.stringify(res.accounts));
             localStorage.setItem('finance-balances', JSON.stringify(res.balances));
             localStorage.setItem('finance-transactions', JSON.stringify(res.transactions));
+            localStorage.setItem('finance-inventory', JSON.stringify(res.inventory || []));
           }
         })
         .catch((error) => {
@@ -95,7 +115,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         });
   }, []);
 
-  const getUserCloudData = async (): Promise<{ accounts: Account[]; balances: Balance[]; transactions: Transaction[] } | null> => {
+  const getUserCloudData = async (): Promise<{ accounts: Account[]; balances: Balance[]; transactions: Transaction[]; inventory: InventoryItem[] } | null> => {
     console.warn('Fetching user cloud data from API');
     const response = await fetch('/api/data', {
       method: 'GET',
@@ -113,14 +133,14 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return data;
   }
 
-  const saveUserCloudData = async (accounts: Account[], balances: Balance[], transactions: Transaction[]) => {
+  const saveUserCloudData = async (accounts: Account[], balances: Balance[], transactions: Transaction[], inventory: InventoryItem[]) => {
     console.warn('Saving user cloud data to API');
     const response = await fetch('/api/data', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ accounts, balances, transactions }),
+      body: JSON.stringify({ accounts, balances, transactions, inventory }),
     });
     
     if (!response.ok) {
@@ -159,8 +179,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('finance-transactions', JSON.stringify(transactions));
   }, [transactions]);
 
+  useEffect(() => {
+    localStorage.setItem('finance-inventory', JSON.stringify(inventory));
+  }, [inventory]);
+
   const triggerCloudSync = () => {
-    return saveUserCloudData(accounts, balances, transactions);
+    return saveUserCloudData(accounts, balances, transactions, inventory);
   }
 
   const triggerRemoveCloudData = () => {
@@ -176,7 +200,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setAccounts(prev => [...prev, newAccount]);
 
     if (isCloudSyncAllowed()) {
-      return saveUserCloudData([...accounts, newAccount], balances, transactions);
+      return saveUserCloudData([...accounts, newAccount], balances, transactions, inventory);
     }
   };
 
@@ -190,7 +214,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setBalances(prev => [...prev, newBalance]);
 
     if (isCloudSyncAllowed()) {
-      return saveUserCloudData(accounts, [...balances, newBalance], transactions);
+      return saveUserCloudData(accounts, [...balances, newBalance], transactions, inventory);
     }
   };
 
@@ -201,7 +225,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       );
 
       if (isCloudSyncAllowed()) {
-        saveUserCloudData(updatedAccounts, balances, transactions);
+        saveUserCloudData(updatedAccounts, balances, transactions, inventory);
       }
 
       return updatedAccounts;
@@ -217,7 +241,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setTransactions(prev => [...prev, newTransaction]);
 
     if (isCloudSyncAllowed()) {
-      saveUserCloudData(accounts, balances, [...transactions, newTransaction]);
+      saveUserCloudData(accounts, balances, [...transactions, newTransaction], inventory);
     }
   };
 
@@ -225,11 +249,44 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setTransactions(prev => {
       const updatedTransactions = prev.filter(t => t.id !== transactionId);
       if (isCloudSyncAllowed()) {
-        saveUserCloudData(accounts, balances, updatedTransactions);
+        saveUserCloudData(accounts, balances, updatedTransactions, inventory);
       }
       return updatedTransactions;
     });
   };
+
+  const addInventoryItem = (itemData: Omit<InventoryItem, 'id' | 'createdAt'>) => {
+    const newItem: InventoryItem = {
+      ...itemData,
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 11),
+      createdAt: new Date(),
+    };
+    setInventory(prev => [...prev, newItem]);
+
+    if (isCloudSyncAllowed()) {
+      saveUserCloudData(accounts, balances, transactions, [...inventory, newItem]);
+    }
+  }
+
+  const updateInventoryItem = (id: string, updates: Partial<InventoryItem>) => {
+    setInventory(prev => {
+      const updated = prev.map(item => item.id === id ? { ...item, ...updates } : item);
+      if (isCloudSyncAllowed()) {
+        saveUserCloudData(accounts, balances, transactions, updated);
+      }
+      return updated;
+    });
+  }
+
+  const deleteInventoryItem = (id: string) => {
+    setInventory(prev => {
+      const updated = prev.filter(item => item.id !== id);
+      if (isCloudSyncAllowed()) {
+        saveUserCloudData(accounts, balances, transactions, updated);
+      }
+      return updated;
+    });
+  }
 
   const updateMultipleBalances = (
     updates: { accountId: string; amount: number }[],
@@ -254,7 +311,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const updatedBalances = [...filteredPrev, ...newBalances];
 
       if (isCloudSyncAllowed()) {
-        saveUserCloudData(accounts, updatedBalances, transactions);
+        saveUserCloudData(accounts, updatedBalances, transactions, inventory);
       }
 
       return updatedBalances;
@@ -289,7 +346,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const mergedBalances = [...updatedPrev, ...newBalances];
 
       if (isCloudSyncAllowed()) {
-        saveUserCloudData(accounts, mergedBalances, transactions);
+        saveUserCloudData(accounts, mergedBalances, transactions, inventory);
       }
 
       return mergedBalances;
@@ -323,11 +380,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const exportData = (): string => {
     const exportData = {
-      version: '1.1',
+      version: '1.2',
       exportDate: new Date().toISOString(),
       accounts,
       balances,
       transactions,
+      inventory,
     };
     return JSON.stringify(exportData, null, 2);
   };
@@ -355,12 +413,19 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         date: new Date(tx.date)
       }));
 
+      const importedInventory = (data.inventory || []).map((item: InventoryItem) => ({
+        ...item,
+        createdAt: new Date(item.createdAt),
+        soldAt: item.soldAt ? new Date(item.soldAt) : undefined
+      }));
+
       setAccounts(importedAccounts);
       setBalances(importedBalances);
       setTransactions(importedTransactions);
+      setInventory(importedInventory);
 
       if (isCloudSyncAllowed()) {
-        saveUserCloudData(importedAccounts, importedBalances, importedTransactions);
+        saveUserCloudData(importedAccounts, importedBalances, importedTransactions, importedInventory);
       }
 
       return true;
@@ -374,9 +439,11 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setAccounts([]);
     setBalances([]);
     setTransactions([]);
+    setInventory([]);
     localStorage.removeItem('finance-accounts');
     localStorage.removeItem('finance-balances');
     localStorage.removeItem('finance-transactions');
+    localStorage.removeItem('finance-inventory');
   };
 
   const getAccountsWithHistory = (): AccountWithHistory[] => {
@@ -398,6 +465,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         accounts,
         balances,
         transactions,
+        inventory,
         isLoading,
         addAccount,
         updateBalance,
@@ -408,6 +476,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         deleteAccount,
         addTransaction,
         deleteTransaction,
+        addInventoryItem,
+        updateInventoryItem,
+        deleteInventoryItem,
         exportData,
         importData,
         clearAllData,

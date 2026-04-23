@@ -4,6 +4,8 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 
+import { useAuth } from '@/context/AuthContext';
+
 interface BalanceInput {
   accountId: string;
   amount: string;
@@ -12,6 +14,8 @@ interface BalanceInput {
 export const RecordBalances = () => {
   const { accounts, balances, getAccountsWithBalances, updateMultipleBalances } = useFinance();
   const { formatCurrency } = useCurrency();
+  const { role } = useAuth();
+  const isReadOnly = role === 'INVESTOR';
   const [balanceInputs, setBalanceInputs] = useState<BalanceInput[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -127,10 +131,11 @@ export const RecordBalances = () => {
             id="balance-date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+            disabled={isReadOnly}
+            className="px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 disabled:opacity-50"
           />
           <p className="text-sm text-gray-500 dark:text-neutral-400 mt-1">
-            Record balances for this specific date. Defaults to today.
+            {isReadOnly ? "Viewing balances for this date." : "Record balances for this specific date. Defaults to today."}
           </p>
         </div>
 
@@ -166,7 +171,8 @@ export const RecordBalances = () => {
                               id={`balance-${account.id}`}
                               value={input?.amount || ''}
                               onChange={(e) => handleAmountChange(account.id, e.target.value)}
-                              className="w-32 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-right bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
+                              disabled={isReadOnly}
+                              className="w-32 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-right bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 disabled:opacity-50"
                               placeholder="0.00"
                             />
                           </div>
@@ -179,15 +185,17 @@ export const RecordBalances = () => {
             </div>
           ))}
 
-          <div className="flex justify-center pt-6">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-brand-red text-white font-medium rounded-md hover:bg-brand-red-dark focus:outline-none focus:ring-2 focus:ring-brand-red focus:ring-offset-2 dark:focus:ring-offset-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isSubmitting ? 'Updating...' : 'Update All Balances'}
-            </button>
-          </div>
+          {!isReadOnly && (
+            <div className="flex justify-center pt-6">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-brand-red text-white font-medium rounded-md hover:bg-brand-red-dark focus:outline-none focus:ring-2 focus:ring-brand-red focus:ring-offset-2 dark:focus:ring-offset-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSubmitting ? 'Updating...' : 'Update All Balances'}
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>
