@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { InventoryItem } from '@/types/finance';
 
 export const InventoryManager = () => {
-    const { inventory, transactions, addInventoryItem, updateInventoryItem, deleteInventoryItem } = useFinance();
+    const { accounts, inventory, transactions, addInventoryItem, updateInventoryItem, deleteInventoryItem, addTransaction } = useFinance();
     const { formatCurrency } = useCurrency();
     const { role, user } = useAuth();
     const isAdmin = role === 'ADMIN' || role === 'MANAGER';
@@ -29,6 +29,12 @@ export const InventoryManager = () => {
     const [purchasePrice, setPurchasePrice] = useState('');
     const [licensePlate, setLicensePlate] = useState('');
     const [investorEmail, setInvestorEmail] = useState('');
+    
+    // Mark as Sold Modal State
+    const [isMarkingSold, setIsMarkingSold] = useState(false);
+    const [soldPrice, setSoldPrice] = useState('');
+    const [soldComm, setSoldComm] = useState('0');
+    const [soldAccountId, setSoldAccountId] = useState('');
 
     const handleAddCar = (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,6 +54,41 @@ export const InventoryManager = () => {
 
     const getCarTransactions = (carId: string) => {
         return transactions.filter(t => t.vehicleId === carId);
+    };
+
+    const handleMarkSoldSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedCarId || !soldPrice || !soldAccountId) return;
+        const car = inventory.find(c => c.id === selectedCarId);
+        if (!car) return;
+
+        const price = parseFloat(soldPrice);
+        const comm = parseFloat(soldComm);
+
+        // 1. Update Inventory Status
+        updateInventoryItem(car.id, { 
+            status: 'sold', 
+            salePrice: price, 
+            sellingBrokerCommission: comm,
+            soldAt: new Date()
+        });
+
+        // 2. Automatically Log Transaction
+        addTransaction({
+            accountId: soldAccountId,
+            vehicleId: car.id,
+            investorEmail: car.investorEmail,
+            amount: price,
+            type: 'income',
+            category: 'Car Sale',
+            description: `Sale of ${car.name} (${car.licensePlate || 'No Plate'})`,
+            date: new Date()
+        });
+
+        setIsMarkingSold(false);
+        setSoldPrice('');
+        setSoldComm('0');
+        setSoldAccountId('');
     };
 
     const calculateCarStats = (car: InventoryItem) => {
@@ -76,7 +117,7 @@ export const InventoryManager = () => {
         <div className="max-w-6xl mx-auto space-y-8 p-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Unit Inventory</h1>
+                    <h1 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Vehicle Inventory</h1>
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Car-wise Profitability & Investor Tracking</p>
                 </div>
                 {isAdmin && (
@@ -84,7 +125,7 @@ export const InventoryManager = () => {
                         onClick={() => setIsAdding(!isAdding)}
                         className="bg-brand-red text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-red-200"
                     >
-                        {isAdding ? 'CLOSE FORM' : 'ADD NEW UNIT'}
+                        {isAdding ? 'CLOSE FORM' : 'ADD NEW VEHICLE'}
                     </button>
                 )}
             </div>
@@ -128,14 +169,23 @@ export const InventoryManager = () => {
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investor (Email)</label>
                             <input 
                                 type="email" 
+                                list="investor-emails"
                                 value={investorEmail}
                                 onChange={(e) => setInvestorEmail(e.target.value)}
                                 placeholder="investor@example.com"
                                 className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
                             />
+                            <datalist id="investor-emails">
+                                {Array.from(new Set([
+                                    ...inventory.map(i => i.investorEmail),
+                                    ...transactions.map(t => t.investorEmail)
+                                ].filter(Boolean))).map(email => (
+                                    <option key={email} value={email!} />
+                                ))}
+                            </datalist>
                         </div>
                         <button type="submit" className="md:col-span-3 bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-black py-4 rounded-2xl uppercase tracking-widest transition-all active:scale-[0.98]">
-                            INITIALIZE UNIT LOGS
+                            INITIALIZE VEHICLE LOGS
                         </button>
                     </form>
                 </div>
@@ -162,7 +212,7 @@ export const InventoryManager = () => {
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2">
-                                            <p className={`text-[10px] font-black uppercase tracking-widest ${selectedCarId === car.id ? 'text-red-100' : 'text-gray-400'}`}>Unit ID: {car.id.slice(0, 8)}</p>
+                                            <p className={`text-[10px] font-black uppercase tracking-widest ${selectedCarId === car.id ? 'text-red-100' : 'text-gray-400'}`}>Vehicle ID: {car.id.slice(0, 8)}</p>
                                             {car.licensePlate && (
                                                 <span className={`px-2 py-0.5 border-2 rounded text-[10px] font-black uppercase tracking-tighter ${selectedCarId === car.id ? 'bg-white text-brand-red border-white' : 'bg-gray-100 dark:bg-neutral-700 border-neutral-900 dark:border-white text-gray-900 dark:text-white'}`}>
                                                     {car.licensePlate}
@@ -219,16 +269,8 @@ export const InventoryManager = () => {
                                     {selectedCar.status === 'available' && isAdmin && (
                                         <button 
                                             onClick={() => {
-                                                const price = prompt('Enter Sold Price:');
-                                                const comm = prompt('Enter Selling Broker Commission:');
-                                                if (price) {
-                                                    updateInventoryItem(selectedCar.id, { 
-                                                        status: 'sold', 
-                                                        salePrice: parseFloat(price), 
-                                                        sellingBrokerCommission: parseFloat(comm || '0'),
-                                                        soldAt: new Date()
-                                                    });
-                                                }
+                                                setSoldAccountId(accounts[0]?.id || '');
+                                                setIsMarkingSold(true);
                                             }}
                                             className="bg-brand-red px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest"
                                         >
@@ -237,7 +279,7 @@ export const InventoryManager = () => {
                                     )}
                                     {selectedCar.status === 'sold' && (
                                         <div className="bg-green-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
-                                            COMPLETED UNIT
+                                            COMPLETED VEHICLE
                                         </div>
                                     )}
                                 </div>
@@ -246,7 +288,7 @@ export const InventoryManager = () => {
                             <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                                 <section className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                                     <div className="space-y-4">
-                                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b pb-2">Unit Financials</h4>
+                                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b pb-2">Vehicle Financials</h4>
                                         <div className="flex justify-between font-bold">
                                             <span className="text-gray-500">Buying Price</span>
                                             <span>{formatCurrency(selectedCar.purchasePrice)}</span>
@@ -318,11 +360,72 @@ export const InventoryManager = () => {
                     ) : (
                         <div className="h-[70vh] flex flex-col items-center justify-center bg-gray-50 dark:bg-neutral-900/20 rounded-[2.5rem] border-2 border-dashed dark:border-neutral-700">
                             <div className="text-6xl mb-4 grayscale opacity-20">🚙</div>
-                            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Select a Unit to view Financial Logs</p>
+                            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Select a Vehicle to view Financial Logs</p>
                         </div>
                     )}
                 </div>
             </div>
+            {/* Mark as Sold Modal */}
+            {isMarkingSold && selectedCar && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-neutral-800 p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border-2 border-brand-red">
+                        <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">Finalize Sale</h3>
+                        <p className="text-gray-500 text-sm mb-6 font-bold">Completing the lifecycle for <span className="text-brand-red">{selectedCar.name}</span></p>
+                        
+                        <form onSubmit={handleMarkSoldSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Final Sale Price</label>
+                                <input 
+                                    type="number" 
+                                    value={soldPrice}
+                                    onChange={(e) => setSoldPrice(e.target.value)}
+                                    placeholder="e.g. 1850000"
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-900 border rounded-xl outline-none font-bold focus:ring-2 focus:ring-brand-red"
+                                    required 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Broker Commission (if any)</label>
+                                <input 
+                                    type="number" 
+                                    value={soldComm}
+                                    onChange={(e) => setSoldComm(e.target.value)}
+                                    placeholder="e.g. 25000"
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-900 border rounded-xl outline-none font-bold focus:ring-2 focus:ring-brand-red"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Account Receiving Payment</label>
+                                <select 
+                                    value={soldAccountId}
+                                    onChange={(e) => setSoldAccountId(e.target.value)}
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-900 border rounded-xl outline-none font-bold focus:ring-2 focus:ring-brand-red"
+                                    required
+                                >
+                                    {accounts.map(acc => (
+                                        <option key={acc.id} value={acc.id}>{acc.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="pt-4 flex gap-4">
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsMarkingSold(false)}
+                                    className="flex-1 py-4 rounded-xl font-black uppercase tracking-widest text-xs bg-gray-100 text-gray-500"
+                                >
+                                    CANCEL
+                                </button>
+                                <button 
+                                    type="submit"
+                                    className="flex-[2] py-4 rounded-xl font-black uppercase tracking-widest text-xs bg-brand-red text-white shadow-lg"
+                                >
+                                    LOG SALE & CLOSE VEHICLE
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -97,6 +97,10 @@ export const InvestorOverview = () => {
         .filter(t => t.type === 'expense' && t.category === 'Repair & Maintenance')
         .reduce((sum, t) => sum + t.amount, 0);
 
+    const fuelExpenses = transactions
+        .filter(t => t.type === 'expense' && t.category === 'Fuel')
+        .reduce((sum, t) => sum + t.amount, 0);
+
     // Helper to format without decimals for high-value dashboard cards
     const formatCompact = (amount: number) => {
         return new Intl.NumberFormat('en-IN', {
@@ -165,7 +169,7 @@ export const InvestorOverview = () => {
                                 <p className="text-3xl font-black text-white">{formatCurrency(investorShare)}</p>
                             </div>
                             <div>
-                                <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Units Funded</p>
+                                <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Vehicles Funded</p>
                                 <p className="text-3xl font-black text-brand-red">{myCars.length}</p>
                             </div>
                         </div>
@@ -211,7 +215,7 @@ export const InvestorOverview = () => {
                     <div className="p-6 bg-gray-50 dark:bg-neutral-900 rounded-3xl border-2 border-neutral-100 dark:border-neutral-700 hover:scale-[1.02] transition-transform cursor-default group">
                         <div className="flex justify-between items-start mb-4">
                             <span className="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500">🏆</span>
-                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2">Units Delivered</span>
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2">Vehicles Delivered</span>
                         </div>
                         <p className="text-5xl font-black text-gray-900 dark:text-white tracking-tighter">{totalUnitsSold}</p>
                         <p className="text-xs font-bold text-gray-500 mt-2 uppercase">Total Lifecycle Completions</p>
@@ -223,7 +227,7 @@ export const InvestorOverview = () => {
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2">Avg Margin</span>
                         </div>
                         <p className="text-5xl font-black text-green-600 tracking-tighter">{formatCompact(avgProfitPerUnit)}</p>
-                        <p className="text-xs font-bold text-gray-500 mt-2 uppercase">Per Unit Efficiency</p>
+                        <p className="text-xs font-bold text-gray-500 mt-2 uppercase">Per Vehicle Efficiency</p>
                     </div>
 
                     <div className="p-6 bg-neutral-900 dark:bg-white rounded-3xl shadow-xl hover:scale-[1.02] transition-transform cursor-default group">
@@ -268,8 +272,12 @@ export const InvestorOverview = () => {
                             <span className="text-red-600 font-bold">-{formatCurrency(repairExpenses)}</span>
                         </div>
                         <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
+                            <span className="font-medium">Fuel & Logistics</span>
+                            <span className="text-red-600 font-bold">-{formatCurrency(fuelExpenses)}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
                             <span className="font-medium text-gray-500">Other Expenses</span>
-                            <span className="text-red-500 font-medium">-{formatCurrency(totalExpenses - carPurchaseExpenses - repairExpenses)}</span>
+                            <span className="text-red-500 font-medium">-{formatCurrency(totalExpenses - carPurchaseExpenses - repairExpenses - fuelExpenses)}</span>
                         </div>
                     </div>
                 </div>
@@ -293,7 +301,7 @@ export const InvestorOverview = () => {
                             </div>
                         </div>
                         <div className="flex justify-between items-center p-3 text-sm text-gray-500 italic">
-                            <span>* Calculated using the most recent recorded balances for all business units.</span>
+                            <span>* Calculated using the most recent recorded balances for all business vehicles.</span>
                         </div>
                     </div>
                 </div>

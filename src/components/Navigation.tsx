@@ -19,8 +19,8 @@ const Navigation = () => {
   const isAdminOrManager = role === 'ADMIN' || role === 'MANAGER';
 
   const inventoryItems = [
-    { href: '/inventory', label: 'Unit Inventory' },
-    { href: '/add-account', label: 'Business Units' },
+    { href: '/inventory', label: 'Vehicle Inventory' },
+    { href: '/add-account', label: 'Business Vehicles' },
     { href: '/record-balances', label: 'Inventory Balances' },
   ];
 
@@ -31,7 +31,7 @@ const Navigation = () => {
 
   const analyticsItems = [
     { href: '/investor-dashboard', label: 'Investor Report' },
-    { href: '/inventory', label: 'Unit Portfolio' },
+    { href: '/inventory', label: 'Vehicle Portfolio' },
     { href: '/transactions', label: 'Master History' },
     { href: '/historical', label: 'Performance Charts' },
   ];

@@ -213,7 +213,7 @@ export const LogTransactions = () => {
 
                             <div>
                                 <label htmlFor="vehicle" className="block text-xs font-bold text-gray-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
-                                    Link to Unit (Inventory)
+                                    Link to Vehicle (Inventory)
                                 </label>
                                 <select
                                     id="vehicle"
@@ -235,11 +235,20 @@ export const LogTransactions = () => {
                                 <input
                                     id="investor"
                                     type="email"
+                                    list="investor-emails"
                                     value={investorEmail}
                                     onChange={(e) => setInvestorEmail(e.target.value)}
                                     className="w-full px-3 py-2 border rounded-md dark:bg-neutral-700 dark:border-neutral-600 font-bold text-blue-600"
                                     placeholder="investor@example.com"
                                 />
+                                <datalist id="investor-emails">
+                                    {Array.from(new Set([
+                                        ...inventory.map(i => i.investorEmail),
+                                        ...transactions.map(t => t.investorEmail)
+                                    ].filter(Boolean))).map(email => (
+                                        <option key={email} value={email!} />
+                                    ))}
+                                </datalist>
                             </div>
                         </div>
 
