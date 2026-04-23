@@ -5,6 +5,7 @@ import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { CurrencySelector } from './CurrencySelector';
 import { ThemeToggle } from './ThemeToggle';
+import { useAuth } from '@/context/AuthContext';
 import { ConfirmationModal } from './ui/ConfirmationModal';
 
 const Settings = () => {
