@@ -26,11 +26,16 @@ export const calculateCarStats = (car: InventoryItem, transactions: Transaction[
     const brokerComm = car.sellingBrokerCommission || 0;
     const netProfit = soldPrice > 0 ? (soldPrice - totalCosting - brokerComm) : 0;
 
+    // Default business model: 50% to Company, 50% split among Investors
+    const investorPool = netProfit / 2;
+    const numInvestors = car.investorEmails?.length || 1;
+    const profitPerPerson = investorPool / numInvestors;
+
     return {
         otherExpenses,
         totalCosting,
         netProfit,
-        profitPerPerson: netProfit / 2,
+        profitPerPerson,
         transactions: carTx
     };
 };
@@ -39,8 +44,11 @@ export const calculateCarStats = (car: InventoryItem, transactions: Transaction[
  * Extracts a unique list of investor emails from inventory and transactions
  */
 export const getUniqueInvestorEmails = (inventory: InventoryItem[], transactions: Transaction[]) => {
+    const fromInventory = inventory.flatMap(i => i.investorEmails || []);
+    const fromTransactions = transactions.flatMap(t => t.investorEmails || []);
+    
     return Array.from(new Set([
-        ...inventory.map(i => i.investorEmail),
-        ...transactions.map(t => t.investorEmail)
+        ...fromInventory,
+        ...fromTransactions
     ].filter(Boolean) as string[]));
 };

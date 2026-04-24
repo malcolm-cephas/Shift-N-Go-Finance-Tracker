@@ -3,6 +3,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
+import { formatAppDate } from '@/utils/financeUtils';
 
 import { useAuth } from '@/context/AuthContext';
 
@@ -77,7 +78,7 @@ export const RecordBalances = () => {
         }
 
         setSuccessMessage(
-          `Successfully updated ${updates.length} account balance${updates.length > 1 ? 's' : ''} for ${balanceDate.toLocaleDateString()}`
+          `Successfully updated ${updates.length} account balance${updates.length > 1 ? 's' : ''} for ${formatAppDate(balanceDate)}`
         );
         setTimeout(() => setSuccessMessage(''), 3000);
       }

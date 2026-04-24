@@ -19,7 +19,7 @@ export const LogTransactions = () => {
     const [category, setCategory] = useState<string>(TRANSACTION_CATEGORIES.expense[0]);
     const [accountId, setAccountId] = useState<string>(accounts[0]?.id || '');
     const [vehicleId, setVehicleId] = useState<string>('');
-    const [investorEmail, setInvestorEmail] = useState<string>('');
+    const [selectedInvestorEmails, setSelectedInvestorEmails] = useState<string[]>([]);
     const [description, setDescription] = useState<string>('');
     const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
@@ -41,7 +41,7 @@ export const LogTransactions = () => {
         addTransaction({
             accountId,
             vehicleId: vehicleId || undefined,
-            investorEmail: investorEmail || undefined,
+            investorEmails: selectedInvestorEmails.length > 0 ? selectedInvestorEmails : undefined,
             amount: parseFloat(amount),
             type,
             category,
@@ -52,7 +52,7 @@ export const LogTransactions = () => {
         setAmount('');
         setDescription('');
         setVehicleId('');
-        setInvestorEmail('');
+        setSelectedInvestorEmails([]);
         setDate(new Date().toISOString().split('T')[0]);
     };
 
@@ -218,24 +218,30 @@ export const LogTransactions = () => {
                                 </select>
                             </div>
 
-                            <div>
-                                <label htmlFor="investor" className="block text-xs font-bold text-gray-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
-                                    Investor Email (For funding)
-                                </label>
-                                <input
-                                    id="investor"
-                                    type="email"
-                                    list="investor-emails"
-                                    value={investorEmail}
-                                    onChange={(e) => setInvestorEmail(e.target.value)}
-                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-700 dark:border-neutral-600 font-bold text-blue-600"
-                                    placeholder="investor@example.com"
-                                />
-                                <datalist id="investor-emails">
+                            {/* Investor Multi-Select */}
+                            <div className="md:col-span-2">
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investors</label>
+                                <div className="flex flex-wrap gap-3 p-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl">
                                     {investorEmails.map(email => (
-                                        <option key={email} value={email}>{getNickname(email)}</option>
+                                        <label key={email} className="flex items-center gap-2 cursor-pointer group">
+                                            <input 
+                                                type="checkbox"
+                                                checked={selectedInvestorEmails.includes(email)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedInvestorEmails(prev => [...prev, email]);
+                                                    } else {
+                                                        setSelectedInvestorEmails(prev => prev.filter(e => e !== email));
+                                                    }
+                                                }}
+                                                className="w-5 h-5 rounded border-neutral-300 text-brand-red focus:ring-brand-red cursor-pointer"
+                                            />
+                                            <span className="text-xs font-bold text-gray-700 dark:text-neutral-300 group-hover:text-brand-red transition-colors">
+                                                {getNickname(email)}
+                                            </span>
+                                        </label>
                                     ))}
-                                </datalist>
+                                </div>
                             </div>
                         </div>
 
@@ -280,7 +286,7 @@ export const LogTransactions = () => {
                         <table className="w-full text-left">
                             <thead>
                                 <tr className="border-b dark:border-neutral-700 text-xs font-black text-gray-400 uppercase tracking-widest">
-                                    <th className="py-2">Date (DD/MM)</th>
+                                    <th className="py-2">Date (DD/MM/YYYY)</th>
                                     <th className="py-2">Details</th>
                                     <th className="py-2">Category</th>
                                     <th className="py-2 text-right">Amount</th>
@@ -302,9 +308,15 @@ export const LogTransactions = () => {
                                             </div>
                                             <div className="text-[10px] uppercase font-bold text-gray-400 flex flex-wrap gap-2">
                                                 <span>{accounts.find(a => a.id === tx.accountId)?.name}</span>
-                                                {tx.investorEmail && (
-                                                    <span className="text-blue-500 italic" title={tx.investorEmail}>👤 {getNickname(tx.investorEmail)}</span>
-                                                )}
+                                            {tx.investorEmails && tx.investorEmails.length > 0 && (
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    {tx.investorEmails.map(email => (
+                                                        <span key={email} className="text-[10px] bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded italic" title={email}>
+                                                            👤 {getNickname(email)}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
                                             </div>
                                         </td>
                                         <td className="py-3">

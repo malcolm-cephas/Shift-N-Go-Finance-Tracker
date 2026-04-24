@@ -5,6 +5,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { TRANSACTION_CATEGORIES } from '@/types/finance';
+import { formatAppDate } from '@/utils/financeUtils';
 
 export default function TransactionsMasterPage() {
     const { transactions, accounts, inventory } = useFinance();
@@ -28,7 +29,7 @@ export default function TransactionsMasterPage() {
             const searchStr = searchTerm.toLowerCase();
             const accountName = accounts.find(a => a.id === tx.accountId)?.name || '';
             const txDate = new Date(tx.date);
-            const txDateStr = txDate.toLocaleDateString('en-GB');
+            const txDateStr = formatAppDate(txDate);
 
             // 1. Text Search
             const matchesSearch = 
@@ -76,13 +77,6 @@ export default function TransactionsMasterPage() {
         return sortedTransactions.slice(start, start + itemsPerPage);
     }, [sortedTransactions, currentPage, itemsPerPage]);
 
-    const formatAppDate = (date: Date | string) => {
-        return new Date(date).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-    };
 
     // All unique categories based on current type filter
     const availableCategories = useMemo(() => {

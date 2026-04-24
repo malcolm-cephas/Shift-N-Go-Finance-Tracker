@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
-import { calculateCarStats } from '@/utils/financeUtils';
+import { calculateCarStats, formatAppDate } from '@/utils/financeUtils';
 
 export const InvestorOverview = () => {
     const { getAccountsWithBalances, transactions, inventory } = useFinance();
@@ -22,19 +22,22 @@ export const InvestorOverview = () => {
 
     // Filter relevant cars and transactions for this specific investor
     const myCars = isSpecificInvestor 
-        ? inventory.filter(c => c.investorEmail?.toLowerCase() === investorEmail)
+        ? inventory.filter(c => c.investorEmails?.some(e => e.toLowerCase() === investorEmail))
         : inventory;
 
     const myCarIds = new Set(myCars.map(c => c.id));
     
     const myTransactions = isSpecificInvestor
-        ? transactions.filter(t => (t.vehicleId && myCarIds.has(t.vehicleId)) || (t.investorEmail?.toLowerCase() === investorEmail))
+        ? transactions.filter(t => 
+            (t.vehicleId && myCarIds.has(t.vehicleId)) || 
+            (t.investorEmails?.some(e => e.toLowerCase() === investorEmail))
+        )
         : transactions;
 
     // Stats Calculation
     const myCapitalContribution = isSpecificInvestor
         ? transactions
-            .filter(t => t.investorEmail?.toLowerCase() === investorEmail && t.type === 'income' && (t.category === 'Owner Investment' || t.category === 'Investor Funding'))
+            .filter(t => t.investorEmails?.some(e => e.toLowerCase() === investorEmail) && t.type === 'income' && (t.category === 'Owner Investment' || t.category === 'Investor Funding'))
             .reduce((sum, t) => sum + t.amount, 0)
         : 0;
 
@@ -128,7 +131,7 @@ export const InvestorOverview = () => {
                 </div>
                 <div className="text-right">
                     <p className="text-xs font-bold text-gray-400">Generated On</p>
-                    <p className="text-sm font-black text-gray-900">{mounted ? new Date().toLocaleDateString('en-IN', { dateStyle: 'long' }) : ''}</p>
+                    <p className="text-sm font-black text-gray-900">{mounted ? formatAppDate(new Date()) : ''}</p>
                 </div>
             </div>
 

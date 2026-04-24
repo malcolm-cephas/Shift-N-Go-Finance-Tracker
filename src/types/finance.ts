@@ -23,7 +23,7 @@ export interface InventoryItem {
   sellingBrokerCommission?: number;
   status: 'available' | 'sold' | 'reserved';
   licensePlate?: string; // Optional: Registration number
-  investorEmail?: string; // Tagged investor who funded this car
+  investorEmails?: string[]; // Tagged investors who funded this car
   createdAt: Date;
   soldAt?: Date;
 }
@@ -32,7 +32,7 @@ export interface Transaction {
   id: string;
   accountId: string; // The account this transaction affected (e.g. Cash)
   vehicleId?: string; // Optional: Link to a specific car in inventory
-  investorEmail?: string; // Optional: Attribute this transaction to a specific investor
+  investorEmails?: string[]; // Optional: Attribute this transaction to specific investors
   amount: number;
   type: 'income' | 'expense';
   category: string;

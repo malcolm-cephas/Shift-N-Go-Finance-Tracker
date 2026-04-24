@@ -101,6 +101,10 @@ export const BalanceChart = ({ account, balances, height = 400 }: BalanceChartPr
         type: 'time' as const,
         time: {
           unit: 'day' as const,
+          displayFormats: {
+            day: 'dd/MM/yyyy'
+          },
+          tooltipFormat: 'dd/MM/yyyy'
         },
         title: {
           display: true,

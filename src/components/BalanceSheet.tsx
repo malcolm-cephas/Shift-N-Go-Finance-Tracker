@@ -5,6 +5,7 @@ import { useFinance } from '@/context/FinanceContext';
 import { Account, AccountWithBalance } from '@/types/finance';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
+import { formatAppDate } from '@/utils/financeUtils';
 import WelcomeScreen from './WelcomeScreen';
 import { ManageAccountModal } from './ManageAccountModal';
 import { ConfirmationModal } from './ui/ConfirmationModal';
@@ -146,7 +147,7 @@ export const BalanceSheet = () => {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-neutral-100 mb-2">Business Financial Summary</h1>
           <p className="text-gray-600 dark:text-neutral-400" suppressHydrationWarning>
-            As of {new Date().toLocaleDateString()}
+            As of {formatAppDate(new Date())}
           </p>
         </div>
         {groupedAccounts.asset && (

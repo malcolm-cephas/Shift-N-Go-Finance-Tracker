@@ -25,12 +25,12 @@ const Navigation = () => {
   ];
 
   const dailyLogItems = [
-    { href: '/log-expenses', label: 'Log New Transaction' },
+    { href: '/log-expenses', label: 'Log Transaction' },
     { href: '/bank-statements', label: 'Import Bank Statements' },
   ];
 
   const reportItems = [
-    { href: '/investor-dashboard', label: 'Investor Profit Report' },
+    { href: '/investor-dashboard', label: 'Investor Progress Report' },
     { href: '/transactions', label: 'Complete Audit Trail' },
     { href: '/historical', label: 'Growth & Performance' },
   ];
@@ -341,7 +341,7 @@ const Navigation = () => {
                 </Link>
               );
             })}
-            
+
             <div className="pt-4 mt-4 border-t border-gray-200">
               {isAdminOrManager && (
                 <Link

@@ -5,7 +5,7 @@ import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
 import { InventoryItem } from '@/types/finance';
-import { calculateCarStats } from '@/utils/financeUtils';
+import { calculateCarStats, formatAppDate } from '@/utils/financeUtils';
 
 export const InventoryManager = () => {
     const { accounts, inventory, transactions, addInventoryItem, updateInventoryItem, deleteInventoryItem, addTransaction, investorEmails, getNickname } = useFinance();
@@ -17,7 +17,7 @@ export const InventoryManager = () => {
     // FILTER: If investor, only show their cars
     const displayInventory = useMemo(() => {
         if (role === 'INVESTOR' && investorEmailIdentity) {
-            return inventory.filter(item => item.investorEmail?.toLowerCase() === investorEmailIdentity);
+            return inventory.filter(item => item.investorEmails?.some(e => e.toLowerCase() === investorEmailIdentity));
         }
         return inventory;
     }, [inventory, role, investorEmailIdentity]);
@@ -29,7 +29,7 @@ export const InventoryManager = () => {
     const [name, setName] = useState('');
     const [purchasePrice, setPurchasePrice] = useState('');
     const [licensePlate, setLicensePlate] = useState('');
-    const [investorEmail, setInvestorEmail] = useState('');
+    const [selectedInvestorEmails, setSelectedInvestorEmails] = useState<string[]>([]);
     
     // Mark as Sold Modal State
     const [isMarkingSold, setIsMarkingSold] = useState(false);
@@ -49,13 +49,13 @@ export const InventoryManager = () => {
             purchasePrice: parseFloat(purchasePrice),
             licensePlate: licensePlate || undefined,
             status: 'available',
-            investorEmail: investorEmail || undefined,
+            investorEmails: selectedInvestorEmails.length > 0 ? selectedInvestorEmails : undefined,
         });
         setIsAdding(false);
         setName('');
         setPurchasePrice('');
         setLicensePlate('');
-        setInvestorEmail('');
+        setSelectedInvestorEmails([]);
     };
 
     const getCarTransactions = (carId: string) => {
@@ -83,7 +83,7 @@ export const InventoryManager = () => {
         addTransaction({
             accountId: soldAccountId,
             vehicleId: car.id,
-            investorEmail: car.investorEmail,
+            investorEmails: car.investorEmails,
             amount: price,
             type: 'income',
             category: 'Car Sale',
@@ -96,7 +96,7 @@ export const InventoryManager = () => {
             addTransaction({
                 accountId: soldAccountId,
                 vehicleId: car.id,
-                investorEmail: car.investorEmail,
+                investorEmails: car.investorEmails,
                 amount: comm,
                 type: 'expense',
                 category: 'Broker Commission',
@@ -118,7 +118,7 @@ export const InventoryManager = () => {
             name,
             purchasePrice: parseFloat(purchasePrice),
             licensePlate: licensePlate || undefined,
-            investorEmail: investorEmail || undefined,
+            investorEmails: selectedInvestorEmails.length > 0 ? selectedInvestorEmails : undefined,
         });
         setIsEditing(false);
     };
@@ -136,7 +136,7 @@ export const InventoryManager = () => {
         setName(selectedCar.name);
         setPurchasePrice(selectedCar.purchasePrice.toString());
         setLicensePlate(selectedCar.licensePlate || '');
-        setInvestorEmail(selectedCar.investorEmail || '');
+        setSelectedInvestorEmails(selectedCar.investorEmails || []);
         setIsEditing(true);
     };
 
@@ -196,21 +196,32 @@ export const InventoryManager = () => {
                                 className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold uppercase"
                             />
                         </div>
-                        <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investor (Email)</label>
-                            <input 
-                                type="email" 
-                                list="investor-emails"
-                                value={investorEmail}
-                                onChange={(e) => setInvestorEmail(e.target.value)}
-                                placeholder="investor@example.com"
-                                className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
-                            />
-                            <datalist id="investor-emails">
+                        <div className="md:col-span-3">
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investors</label>
+                            <div className="flex flex-wrap gap-4 p-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl">
                                 {investorEmails.map(email => (
-                                    <option key={email} value={email}>{getNickname(email)}</option>
+                                    <label key={email} className="flex items-center gap-2 cursor-pointer group">
+                                        <input 
+                                            type="checkbox"
+                                            checked={selectedInvestorEmails.includes(email)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedInvestorEmails(prev => [...prev, email]);
+                                                } else {
+                                                    setSelectedInvestorEmails(prev => prev.filter(e => e !== email));
+                                                }
+                                            }}
+                                            className="w-5 h-5 rounded border-neutral-300 text-brand-red focus:ring-brand-red cursor-pointer"
+                                        />
+                                        <span className="text-sm font-bold text-gray-700 dark:text-neutral-300 group-hover:text-brand-red transition-colors">
+                                            {getNickname(email)}
+                                        </span>
+                                    </label>
                                 ))}
-                            </datalist>
+                                {investorEmails.length === 0 && (
+                                    <p className="text-xs text-neutral-400 font-bold italic">No known investors yet. Tag them in transactions first.</p>
+                                )}
+                            </div>
                         </div>
                         <button type="submit" className="md:col-span-3 bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-black py-4 rounded-2xl uppercase tracking-widest transition-all active:scale-[0.98]">
                             INITIALIZE VEHICLE LOGS
@@ -229,50 +240,86 @@ export const InventoryManager = () => {
                     )}
                     {displayInventory.map(car => {
                         const stats = calculateCarStats(car, transactions);
+                        const isSelected = selectedCarId === car.id;
                         return (
                             <button 
                                 key={car.id}
                                 onClick={() => setSelectedCarId(car.id)}
-                                className={`w-full text-left p-6 rounded-[2rem] border transition-all duration-300 group ${selectedCarId === car.id 
-                                    ? 'bg-brand-red border-brand-red shadow-xl shadow-red-200 -translate-y-1' 
-                                    : 'bg-white dark:bg-neutral-800 border-neutral-100 dark:border-neutral-700 hover:border-brand-red'}`}
+                                className={`w-full text-left p-6 rounded-[2.5rem] border transition-all duration-500 group relative overflow-hidden ${
+                                    isSelected 
+                                    ? 'bg-neutral-900 dark:bg-white border-neutral-900 dark:border-white shadow-2xl shadow-red-500/20 -translate-y-1' 
+                                    : 'bg-white/80 dark:bg-neutral-800/50 backdrop-blur-sm border-neutral-100 dark:border-neutral-700 hover:border-brand-red/50 hover:shadow-lg'
+                                }`}
                             >
-                                <div className="flex justify-between items-start mb-4">
+                                {isSelected && (
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-red opacity-10 blur-3xl -mr-16 -mt-16 animate-pulse"></div>
+                                )}
+                                
+                                <div className="flex justify-between items-start mb-6 relative z-10">
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <p className={`text-[10px] font-black uppercase tracking-widest ${selectedCarId === car.id ? 'text-red-100' : 'text-gray-400'}`}>Vehicle ID: {car.id.slice(0, 8)}</p>
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isSelected ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-400'}`}>
+                                                #{car.id.slice(0, 6)}
+                                            </span>
                                             {car.licensePlate && (
-                                                <span className={`px-2 py-0.5 border-2 rounded text-[10px] font-black uppercase tracking-tighter ${selectedCarId === car.id ? 'bg-white text-brand-red border-white' : 'bg-gray-100 dark:bg-neutral-700 border-neutral-900 dark:border-white text-gray-900 dark:text-white'}`}>
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter border ${
+                                                    isSelected 
+                                                    ? 'bg-brand-red border-brand-red text-white' 
+                                                    : 'bg-neutral-100 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300'
+                                                }`}>
                                                     {car.licensePlate}
                                                 </span>
                                             )}
                                         </div>
-                                        <h3 className={`text-xl font-black mt-1 ${selectedCarId === car.id ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{car.name}</h3>
+                                        <h3 className={`text-2xl font-black tracking-tight ${isSelected ? 'text-white dark:text-neutral-900' : 'text-neutral-900 dark:text-white'}`}>
+                                            {car.name}
+                                        </h3>
                                     </div>
-                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${car.status === 'sold' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                    <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm ${
+                                        car.status === 'sold' 
+                                        ? 'bg-emerald-500 text-white' 
+                                        : car.status === 'reserved'
+                                        ? 'bg-amber-500 text-white'
+                                        : 'bg-brand-blue text-white'
+                                    }`}>
                                         {car.status}
                                     </span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p className={`text-[10px] font-black uppercase tracking-widest ${selectedCarId === car.id ? 'text-red-200' : 'text-gray-400'}`}>Costing</p>
-                                        <p className={`font-bold ${selectedCarId === car.id ? 'text-white' : 'text-gray-800 dark:text-neutral-200'}`}>{formatCurrency(stats.totalCosting)}</p>
+
+                                <div className="grid grid-cols-2 gap-6 relative z-10">
+                                    <div className="space-y-1">
+                                        <p className={`text-[10px] font-black uppercase tracking-[0.15em] ${isSelected ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-400'}`}>Invested Value</p>
+                                        <p className={`text-xl font-black tabular-nums ${isSelected ? 'text-white dark:text-neutral-900' : 'text-neutral-900 dark:text-white'}`}>
+                                            {formatCurrency(stats.totalCosting)}
+                                        </p>
                                     </div>
                                     {car.status === 'sold' && (
-                                        <div>
-                                            <p className={`text-[10px] font-black uppercase tracking-widest ${selectedCarId === car.id ? 'text-red-200' : 'text-gray-400'}`}>Net Profit</p>
-                                            <p className={`font-bold ${selectedCarId === car.id ? 'text-white' : 'text-green-600'}`}>{formatCurrency(stats.netProfit)}</p>
+                                        <div className="space-y-1">
+                                            <p className={`text-[10px] font-black uppercase tracking-[0.15em] ${isSelected ? 'text-emerald-400' : 'text-neutral-400'}`}>Yield (Profit)</p>
+                                            <p className={`text-xl font-black tabular-nums ${isSelected ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-500'}`}>
+                                                +{formatCurrency(stats.netProfit)}
+                                            </p>
                                         </div>
                                     )}
                                 </div>
-                                {car.investorEmail && (
-                                    <div className={`mt-4 pt-4 border-t ${selectedCarId === car.id ? 'border-white/20' : 'border-neutral-50 dark:border-neutral-700'}`}>
-                                        <p 
-                                            className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${selectedCarId === car.id ? 'text-white' : 'text-gray-500'}`}
-                                            title={car.investorEmail}
-                                        >
-                                            👤 {getNickname(car.investorEmail)}
-                                        </p>
+
+                                {car.investorEmails && car.investorEmails.length > 0 && (
+                                    <div className={`mt-6 pt-6 border-t relative z-10 ${isSelected ? 'border-neutral-800 dark:border-neutral-100' : 'border-neutral-50 dark:border-neutral-700/50'}`}>
+                                        <div className="flex flex-wrap gap-2">
+                                            {car.investorEmails.map(email => (
+                                                <span 
+                                                    key={email}
+                                                    className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-colors ${
+                                                        isSelected 
+                                                        ? 'bg-neutral-800 dark:bg-neutral-50 border-neutral-700 dark:border-neutral-200 text-neutral-300 dark:text-neutral-600' 
+                                                        : 'bg-neutral-50 dark:bg-neutral-900/50 border-neutral-100 dark:border-neutral-700 text-neutral-500'
+                                                    }`}
+                                                    title={email}
+                                                >
+                                                    👤 {getNickname(email)}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </button>
@@ -295,13 +342,18 @@ export const InventoryManager = () => {
                                         <h2 className="text-3xl font-black uppercase tracking-tighter">{selectedCar.name}</h2>
                                         <div className="flex items-center gap-2 mt-1">
                                             <p className="text-xs font-bold text-red-400 uppercase tracking-[0.3em] italic leading-none">Vehicle Operational Sheet</p>
-                                            {selectedCar.investorEmail && (
-                                                <span 
-                                                    className="text-[10px] font-black text-gray-500 bg-gray-100 dark:bg-neutral-800 px-2 py-0.5 rounded uppercase tracking-widest border dark:border-neutral-700"
-                                                    title={selectedCar.investorEmail}
-                                                >
-                                                    👤 {getNickname(selectedCar.investorEmail)}
-                                                </span>
+                                            {selectedCar.investorEmails && selectedCar.investorEmails.length > 0 && (
+                                                <div className="flex gap-1 ml-2">
+                                                    {selectedCar.investorEmails.map(email => (
+                                                        <span 
+                                                            key={email}
+                                                            className="text-[9px] font-black text-gray-400 bg-white/10 px-2 py-0.5 rounded uppercase tracking-widest border border-white/20"
+                                                            title={email}
+                                                        >
+                                                            👤 {getNickname(email)}
+                                                        </span>
+                                                    ))}
+                                                </div>
                                             )}
                                         </div>
                                     </div>
@@ -379,9 +431,15 @@ export const InventoryManager = () => {
                                                         {formatCurrency(selectedCarStats!.netProfit)}
                                                     </span>
                                                 </div>
-                                                <div className="mt-4 p-4 bg-gray-50 dark:bg-neutral-900 rounded-2xl flex justify-between items-center">
-                                                    <span className="text-[10px] font-black uppercase italic text-gray-400">Profit Split (50/50)</span>
-                                                    <span className="font-black text-brand-red">{formatCurrency(selectedCarStats!.profitPerPerson)} each</span>
+                                                <div className="mt-4 p-6 bg-red-50 dark:bg-red-950/20 rounded-[2rem] border border-red-100 dark:border-red-900/30">
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400">Profit Distribution</span>
+                                                        <span className="text-[9px] font-bold text-red-400 uppercase italic">50/50 Dealer split</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-end">
+                                                        <span className="text-2xl font-black text-brand-red">{formatCurrency(selectedCarStats!.profitPerPerson)}</span>
+                                                        <span className="text-[10px] font-bold text-red-600/60 uppercase tracking-tighter">Per Investor Share</span>
+                                                    </div>
                                                 </div>
                                             </>
                                         ) : (
@@ -404,7 +462,7 @@ export const InventoryManager = () => {
                                                     <div className={`w-2 h-2 rounded-full ${tx.type === 'income' ? 'bg-green-500' : 'bg-red-500'}`}></div>
                                                     <div>
                                                         <p className="font-bold text-sm">{tx.description}</p>
-                                                        <p className="text-[10px] uppercase font-black text-gray-400">{tx.category}</p>
+                                                        <p className="text-[10px] uppercase font-black text-gray-400">{formatAppDate(tx.date)} • {tx.category}</p>
                                                     </div>
                                                 </div>
                                                 <div className={`font-black ${tx.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
@@ -522,14 +580,28 @@ export const InventoryManager = () => {
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investor (Email)</label>
-                                <input 
-                                    type="email" 
-                                    list="investor-emails"
-                                    value={investorEmail}
-                                    onChange={(e) => setInvestorEmail(e.target.value)}
-                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
-                                />
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investors</label>
+                                <div className="flex flex-wrap gap-4 p-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl">
+                                    {investorEmails.map(email => (
+                                        <label key={email} className="flex items-center gap-2 cursor-pointer group">
+                                            <input 
+                                                type="checkbox"
+                                                checked={selectedInvestorEmails.includes(email)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedInvestorEmails(prev => [...prev, email]);
+                                                    } else {
+                                                        setSelectedInvestorEmails(prev => prev.filter(e => e !== email));
+                                                    }
+                                                }}
+                                                className="w-5 h-5 rounded border-neutral-300 text-brand-red focus:ring-brand-red cursor-pointer"
+                                            />
+                                            <span className="text-sm font-bold text-gray-700 dark:text-neutral-300 group-hover:text-brand-red transition-colors">
+                                                {getNickname(email)}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
                             </div>
                             <div className="md:col-span-2 flex gap-4 pt-4">
                                 <button 

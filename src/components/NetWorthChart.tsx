@@ -169,6 +169,10 @@ export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChar
         type: 'time' as const,
         time: {
           unit: 'day' as const,
+          displayFormats: {
+            day: 'dd/MM/yyyy'
+          },
+          tooltipFormat: 'dd/MM/yyyy'
         },
         title: {
           display: true,
