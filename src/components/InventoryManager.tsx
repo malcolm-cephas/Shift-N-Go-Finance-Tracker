@@ -66,7 +66,7 @@ export const InventoryManager = () => {
                 investorEmails: newItem.investorEmails,
                 amount: price,
                 type: 'expense',
-                category: 'Vehicle Purchase',
+                category: 'Car Purchase (Inventory)',
                 description: `Acquisition of ${newItem.name} (${newItem.licensePlate || 'No Plate'})`,
                 date: new Date()
             });

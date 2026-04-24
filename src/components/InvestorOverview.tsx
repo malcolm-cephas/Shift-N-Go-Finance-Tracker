@@ -86,8 +86,15 @@ export const InvestorOverview = () => {
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
 
+    const inventoryPurchases = transactions
+        .filter(t => t.type === 'expense' && t.category === 'Car Purchase (Inventory)')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const operationalExpenses = totalExpenses - inventoryPurchases;
+
     // Business Value Net = (Cash Flow) + (Unsold Asset Value)
-    const netProfit = (totalSales + otherIncome - totalExpenses) + inventoryValue;
+    // Here we treat car purchases as an asset swap (Cash -> Inventory), not a P&L loss.
+    const netProfit = (totalSales + otherIncome - operationalExpenses) + (inventoryValue - inventoryPurchases);
 
     const realizedProfit = inventory
         .filter(i => i.status === 'sold')
@@ -100,10 +107,6 @@ export const InvestorOverview = () => {
         .reduce((sum, car) => sum + calculateCarStats(car, transactions).netProfit, 0);
     
     const avgProfitPerUnit = totalUnitsSold > 0 ? allSoldCarsProfit / totalUnitsSold : 0;
-
-    const carPurchaseExpenses = transactions
-        .filter(t => t.type === 'expense' && t.category === 'Car Purchase (Inventory)')
-        .reduce((sum, t) => sum + t.amount, 0);
 
     const repairExpenses = transactions
         .filter(t => t.type === 'expense' && t.category === 'Repair & Maintenance')
@@ -199,11 +202,11 @@ export const InvestorOverview = () => {
                     <p className="text-xl font-black text-green-900 dark:text-neutral-100 print:text-[14px] break-words">{formatCompact(totalSales)}</p>
                 </div>
                 <div className="bg-red-50 dark:bg-neutral-800 p-6 rounded-xl border border-red-100 dark:border-neutral-700 min-w-0 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">Total Expenses</p>
-                    <p className="text-xl font-black text-red-900 dark:text-neutral-100 print:text-[14px] break-words">{formatCompact(totalExpenses)}</p>
+                    <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">Operational Expenses</p>
+                    <p className="text-xl font-black text-red-900 dark:text-neutral-100 print:text-[14px] break-words">{formatCompact(operationalExpenses)}</p>
                 </div>
                 <div className="bg-purple-50 dark:bg-neutral-800 p-6 rounded-xl border border-purple-100 dark:border-neutral-700 min-w-0 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">Net Position (Cash + Stock)</p>
+                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">Net Position (Profit + Stock)</p>
                     <p className={`text-xl font-black print:text-[14px] break-words ${netProfit >= 0 ? 'text-purple-900 dark:text-purple-100' : 'text-red-700'}`}>
                         {formatCompact(netProfit)}
                     </p>
@@ -282,7 +285,7 @@ export const InvestorOverview = () => {
                         </div>
                         <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
                             <span className="font-medium">Inventory Purchases</span>
-                            <span className="text-red-600 font-bold">-{formatCurrency(carPurchaseExpenses)}</span>
+                            <span className="text-red-600 font-bold">-{formatCurrency(inventoryPurchases)}</span>
                         </div>
                         <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
                             <span className="font-medium">Repair & Detailing Costs</span>
@@ -294,7 +297,7 @@ export const InvestorOverview = () => {
                         </div>
                         <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
                             <span className="font-medium text-gray-500">Other Expenses</span>
-                            <span className="text-red-500 font-medium">-{formatCurrency(totalExpenses - carPurchaseExpenses - repairExpenses - fuelExpenses)}</span>
+                            <span className="text-red-500 font-medium">-{formatCurrency(totalExpenses - inventoryPurchases - repairExpenses - fuelExpenses)}</span>
                         </div>
                     </div>
                 </div>
@@ -304,8 +307,12 @@ export const InvestorOverview = () => {
                     <h2 className="text-xl font-bold border-b pb-2">Business Equity</h2>
                     <div className="space-y-4">
                         <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
-                            <span className="font-medium">Total Current Assets</span>
+                            <span className="font-medium">Total Current Cash (Accounts)</span>
                             <span className="text-brand-red font-bold">{formatCurrency(totalAssets)}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
+                            <span className="font-medium">Total Inventory Value</span>
+                            <span className="text-brand-red font-bold">{formatCurrency(inventoryValue)}</span>
                         </div>
                         <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
                             <span className="font-medium">Total Liabilities</span>
@@ -314,7 +321,7 @@ export const InvestorOverview = () => {
                         <div className="pt-4 border-t-2 border-dashed border-gray-200 dark:border-neutral-700">
                             <div className="flex justify-between items-center p-4 bg-brand-red rounded-xl shadow-lg shadow-red-600/20 print:bg-white print:border-2 print:border-brand-red print:shadow-none">
                                 <span className="text-lg font-bold text-white uppercase tracking-wider print:text-brand-red">Business Net Worth</span>
-                                <span className="text-2xl font-black text-white print:text-brand-red">{formatCurrency(totalAssets - totalLiabilities)}</span>
+                                <span className="text-2xl font-black text-white print:text-brand-red">{formatCurrency(totalAssets + inventoryValue - totalLiabilities)}</span>
                             </div>
                         </div>
                         <div className="flex justify-between items-center p-3 text-sm text-gray-500 italic">
