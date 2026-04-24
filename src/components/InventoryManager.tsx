@@ -142,16 +142,19 @@ export const InventoryManager = () => {
 
 
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'reserved' | 'sold'>('available');
     const [expandedBrands, setExpandedBrands] = useState<string[]>([]);
 
     const getBrand = (name: string) => name.split(' ')[0] || 'Unknown';
 
     const filteredInventory = useMemo(() => {
-        return displayInventory.filter(car => 
-            car.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            car.licensePlate?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [displayInventory, searchTerm]);
+        return displayInventory.filter(car => {
+            const matchesSearch = car.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                 car.licensePlate?.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesStatus = statusFilter === 'all' || car.status === statusFilter;
+            return matchesSearch && matchesStatus;
+        });
+    }, [displayInventory, searchTerm, statusFilter]);
 
     const groupedInventory = useMemo(() => {
         const groups: Record<string, InventoryItem[]> = {};
@@ -186,23 +189,38 @@ export const InventoryManager = () => {
                     <h1 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Vehicle Inventory</h1>
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Car-wise Profitability & Investor Tracking</p>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4 items-center">
+                    <div className="flex bg-gray-100 dark:bg-neutral-800 p-1 rounded-xl border dark:border-neutral-700 h-[42px]">
+                        {(['all', 'available', 'reserved', 'sold'] as const).map((s) => (
+                            <button
+                                key={s}
+                                onClick={() => setStatusFilter(s)}
+                                className={`px-4 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                    statusFilter === s 
+                                    ? 'bg-white dark:bg-neutral-700 shadow-md text-brand-red' 
+                                    : 'text-neutral-400 hover:text-gray-900 dark:hover:text-white'
+                                }`}
+                            >
+                                {s}
+                            </button>
+                        ))}
+                    </div>
                     <div className="relative group">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs">🔍</span>
                         <input 
                             type="text"
                             placeholder="Search fleet..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 bg-white dark:bg-neutral-800 border rounded-xl text-xs font-bold focus:ring-2 focus:ring-brand-red outline-none min-w-[200px]"
+                            className="pl-10 pr-4 py-2.5 bg-white dark:bg-neutral-800 border rounded-xl text-[11px] font-bold focus:ring-2 focus:ring-brand-red outline-none min-w-[180px]"
                         />
                     </div>
                     {isAdmin && (
                         <button 
                             onClick={() => setIsAdding(!isAdding)}
-                            className="bg-brand-red text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-red-200 whitespace-nowrap"
+                            className="bg-brand-red text-white px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-red-200 whitespace-nowrap"
                         >
-                            {isAdding ? 'CLOSE FORM' : 'ADD NEW VEHICLE'}
+                            {isAdding ? 'CLOSE' : 'ADD UNIT'}
                         </button>
                     )}
                 </div>
