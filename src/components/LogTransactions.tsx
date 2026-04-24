@@ -106,6 +106,16 @@ export const LogTransactions = () => {
         );
     }, [sortedTransactions, currentPage, itemsPerPage]);
 
+    const groupedInventory = useMemo(() => {
+        const groups: Record<string, typeof inventory> = {};
+        inventory.forEach(item => {
+            const brand = item.name.split(' ')[0] || 'General';
+            if (!groups[brand]) groups[brand] = [];
+            groups[brand].push(item);
+        });
+        return groups;
+    }, [inventory]);
+
     return (
         <div className="max-w-4xl mx-auto space-y-6 text-sm">
             <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg p-6">
@@ -231,11 +241,17 @@ export const LogTransactions = () => {
                                     id="vehicle"
                                     value={vehicleId}
                                     onChange={(e) => setVehicleId(e.target.value)}
-                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-700 dark:border-neutral-600 font-bold text-brand-red"
+                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-700 dark:border-neutral-600 font-bold text-brand-red appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em]"
                                 >
                                     <option value="">-- General Expense --</option>
-                                    {inventory.map(item => (
-                                        <option key={item.id} value={item.id}>🚗 {item.name}</option>
+                                    {Object.entries(groupedInventory).map(([brand, cars]) => (
+                                        <optgroup key={brand} label={brand.toUpperCase()}>
+                                            {cars.map(item => (
+                                                <option key={item.id} value={item.id}>
+                                                    {item.name} {item.licensePlate ? `(${item.licensePlate})` : ''}
+                                                </option>
+                                            ))}
+                                        </optgroup>
                                     ))}
                                 </select>
                             </div>
