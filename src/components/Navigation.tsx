@@ -104,8 +104,8 @@ const Navigation = () => {
                 SUMMARY
               </Link>
 
-              {/* Inventory Dropdown - Restricted to Admin/Manager */}
-              {isAdminOrManager && (
+              {/* Inventory Dropdown - Restricted to Admin/Manager and Investor */}
+              {(isAdminOrManager || role === 'INVESTOR') && (
                 <div className="relative">
                   <button
                     onClick={() => setActiveDropdown(activeDropdown === 'inventory' ? null : 'inventory')}
@@ -322,7 +322,7 @@ const Navigation = () => {
             {/* Main Nav Items */}
             {[
               { href: '/', label: 'Business Summary' },
-              ...(isAdminOrManager ? inventoryItems : []),
+              ...(isAdminOrManager || role === 'INVESTOR' ? inventoryItems : []),
               ...(isAdminOrManager ? dailyLogItems : []),
               ...reportItems,
             ].map((item) => {

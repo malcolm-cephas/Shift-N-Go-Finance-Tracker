@@ -77,7 +77,8 @@ export const InvestorOverview = () => {
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
 
-    const netProfit = (totalSales + otherIncome) - totalExpenses;
+    // Business Value Net = (Cash Flow) + (Unsold Asset Value)
+    const netProfit = (totalSales + otherIncome - totalExpenses) + inventoryValue;
 
     const realizedProfit = inventory
         .filter(i => i.status === 'sold')
@@ -160,18 +161,18 @@ export const InvestorOverview = () => {
                             <p className="text-red-400 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Active Portfolio Insight</p>
                             <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">{user.name || user.email?.split('@')[0]}'s Investment</h2>
                         </div>
-                        <div className="flex gap-12 text-center md:text-left flex-wrap md:flex-nowrap justify-center md:justify-start">
-                            <div>
-                                <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Capital Provided</p>
-                                <p className="text-3xl font-black text-white">{formatCurrency(myCapitalContribution)}</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12 text-center md:text-left">
+                            <div className="min-w-max">
+                                <p className="text-red-400/60 text-[10px] font-black uppercase tracking-widest mb-1">Capital Provided</p>
+                                <p className="text-3xl font-black text-white tabular-nums">{formatCurrency(myCapitalContribution)}</p>
                             </div>
-                            <div>
-                                <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Your 50% Share</p>
-                                <p className="text-3xl font-black text-white">{formatCurrency(investorShare)}</p>
+                            <div className="min-w-max">
+                                <p className="text-red-400/60 text-[10px] font-black uppercase tracking-widest mb-1">Your 50% Share</p>
+                                <p className="text-3xl font-black text-white tabular-nums">{formatCurrency(investorShare)}</p>
                             </div>
-                            <div>
-                                <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Vehicles Funded</p>
-                                <p className="text-3xl font-black text-brand-red">{myCars.length}</p>
+                            <div className="min-w-max">
+                                <p className="text-red-400/60 text-[10px] font-black uppercase tracking-widest mb-1">Vehicles Funded</p>
+                                <p className="text-3xl font-black text-brand-red tabular-nums">{myCars.length}</p>
                             </div>
                         </div>
                     </div>
@@ -181,26 +182,26 @@ export const InvestorOverview = () => {
             {/* Main Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 print:grid-cols-5 print:gap-2 font-heading">
                 <div className="bg-brand-red/5 dark:bg-neutral-800 p-6 rounded-xl border border-brand-red/10 dark:border-neutral-700 min-w-0 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-brand-red uppercase tracking-widest mb-1 truncate">Total Inventory</p>
-                    <p className="text-2xl font-black text-gray-900 dark:text-white print:text-[14px] truncate" title={formatCompact(inventoryValue)}>{formatCompact(inventoryValue)}</p>
+                    <p className="text-[10px] font-black text-brand-red uppercase tracking-widest mb-1">Total Inventory</p>
+                    <p className="text-xl font-black text-gray-900 dark:text-white print:text-[14px] break-words">{formatCompact(inventoryValue)}</p>
                 </div>
                 <div className="bg-green-50 dark:bg-neutral-800 p-6 rounded-xl border border-green-100 dark:border-neutral-700 min-w-0 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1 truncate">Company Sales</p>
-                    <p className="text-2xl font-black text-green-900 dark:text-neutral-100 print:text-[14px] truncate" title={formatCompact(totalSales)}>{formatCompact(totalSales)}</p>
+                    <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Company Sales</p>
+                    <p className="text-xl font-black text-green-900 dark:text-neutral-100 print:text-[14px] break-words">{formatCompact(totalSales)}</p>
                 </div>
                 <div className="bg-red-50 dark:bg-neutral-800 p-6 rounded-xl border border-red-100 dark:border-neutral-700 min-w-0 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1 truncate">Total Expenses</p>
-                    <p className="text-2xl font-black text-red-900 dark:text-neutral-100 print:text-[14px] truncate" title={formatCompact(totalExpenses)}>{formatCompact(totalExpenses)}</p>
+                    <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">Total Expenses</p>
+                    <p className="text-xl font-black text-red-900 dark:text-neutral-100 print:text-[14px] break-words">{formatCompact(totalExpenses)}</p>
                 </div>
                 <div className="bg-purple-50 dark:bg-neutral-800 p-6 rounded-xl border border-purple-100 dark:border-neutral-700 min-w-0 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1 truncate">Company Net</p>
-                    <p className={`text-2xl font-black print:text-[14px] truncate ${netProfit >= 0 ? 'text-purple-900 dark:text-purple-100' : 'text-red-700'}`} title={formatCompact(netProfit)}>
+                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">Net Position (Cash + Stock)</p>
+                    <p className={`text-xl font-black print:text-[14px] break-words ${netProfit >= 0 ? 'text-purple-900 dark:text-purple-100' : 'text-red-700'}`}>
                         {formatCompact(netProfit)}
                     </p>
                 </div>
                 <div className="bg-blue-50 dark:bg-neutral-800 p-6 rounded-xl border border-blue-100 dark:border-neutral-700 min-w-0 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 truncate">Realized Profit</p>
-                    <p className={`text-2xl font-black print:text-[14px] truncate ${realizedProfit >= 0 ? 'text-blue-900 dark:text-blue-100' : 'text-red-700'}`} title={formatCompact(realizedProfit)}>
+                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Realized Profit</p>
+                    <p className={`text-xl font-black print:text-[14px] break-words ${realizedProfit >= 0 ? 'text-blue-900 dark:text-blue-100' : 'text-red-700'}`}>
                         {formatCompact(realizedProfit)}
                     </p>
                 </div>
@@ -233,8 +234,8 @@ export const InvestorOverview = () => {
                             <span className="text-3xl grayscale group-hover:grayscale-0 transition-all duration-500">📈</span>
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest pt-2">Avg Margin</span>
                         </div>
-                        <p className="text-5xl font-black text-green-600 tracking-tighter">{formatCompact(avgProfitPerUnit)}</p>
-                        <p className="text-xs font-bold text-gray-500 mt-2 uppercase">Per Vehicle Efficiency</p>
+                        <p className="text-5xl font-black text-green-600 tracking-tighter break-words">{formatCompact(avgProfitPerUnit)}</p>
+                        <p className="text-xs font-bold text-gray-400 dark:text-gray-500 mt-2 uppercase">Per Vehicle Efficiency</p>
                     </div>
 
                     <div className="p-6 bg-neutral-900 dark:bg-white rounded-3xl shadow-xl hover:scale-[1.02] transition-transform cursor-default group">
@@ -242,7 +243,7 @@ export const InvestorOverview = () => {
                             <span className="text-3xl">🔥</span>
                             <span className="text-[10px] font-black uppercase tracking-widest pt-2 opacity-50">Dealership Net</span>
                         </div>
-                        <p className={`text-5xl font-black tracking-tighter ${netProfit >= 0 ? 'text-white dark:text-neutral-900' : 'text-red-500'}`}>
+                        <p className={`text-5xl font-black tracking-tighter break-words ${netProfit >= 0 ? 'text-white dark:text-neutral-900' : 'text-red-500'}`}>
                             {formatCompact(netProfit)}
                         </p>
                         <p className="text-xs font-bold text-gray-400 dark:text-gray-500 mt-2 uppercase">Total Retained Earnings</p>
