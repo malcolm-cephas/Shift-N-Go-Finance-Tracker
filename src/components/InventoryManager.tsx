@@ -331,23 +331,23 @@ export const InventoryManager = () => {
                 <div className="lg:col-span-2">
                     {selectedCar ? (
                         <div className="bg-white dark:bg-neutral-800 rounded-[2.5rem] shadow-2xl border dark:border-neutral-700 overflow-hidden flex flex-col h-[70vh]">
-                            <div className="p-8 bg-neutral-900 text-white relative flex justify-between items-center">
-                                <div className="flex items-center gap-6">
+                            <div className="p-8 bg-neutral-900 text-white relative flex flex-wrap justify-between items-center gap-6">
+                                <div className="flex items-center gap-6 min-w-0">
                                     {selectedCar.licensePlate && (
-                                        <div className="bg-white text-neutral-900 px-3 py-1.5 rounded-lg border-2 border-brand-red font-black text-xs uppercase tracking-tight shadow-lg">
+                                        <div className="shrink-0 bg-white text-neutral-900 px-3 py-1.5 rounded-lg border-2 border-brand-red font-black text-xs uppercase tracking-tight shadow-lg">
                                             {selectedCar.licensePlate}
                                         </div>
                                     )}
-                                    <div>
-                                        <h2 className="text-3xl font-black uppercase tracking-tighter">{selectedCar.name}</h2>
+                                    <div className="min-w-0">
+                                        <h2 className="text-3xl font-black uppercase tracking-tighter truncate">{selectedCar.name}</h2>
                                         <div className="flex items-center gap-2 mt-1">
-                                            <p className="text-xs font-bold text-red-400 uppercase tracking-[0.3em] italic leading-none">Vehicle Operational Sheet</p>
+                                            <p className="text-xs font-bold text-red-400 uppercase tracking-[0.3em] italic leading-none whitespace-nowrap">Vehicle Operational Sheet</p>
                                             {selectedCar.investorEmails && selectedCar.investorEmails.length > 0 && (
-                                                <div className="flex gap-1 ml-2">
+                                                <div className="flex flex-wrap gap-1 ml-2">
                                                     {selectedCar.investorEmails.map(email => (
                                                         <span 
                                                             key={email}
-                                                            className="text-[9px] font-black text-gray-400 bg-white/10 px-2 py-0.5 rounded uppercase tracking-widest border border-white/20"
+                                                            className="text-[9px] font-black text-gray-400 bg-white/10 px-2 py-0.5 rounded uppercase tracking-widest border border-white/20 whitespace-nowrap"
                                                             title={email}
                                                         >
                                                             👤 {getNickname(email)}
@@ -358,7 +358,7 @@ export const InventoryManager = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 shrink-0">
                                     {isAdmin && (
                                         <>
                                             <button 
@@ -378,18 +378,45 @@ export const InventoryManager = () => {
                                         </>
                                     )}
                                     {selectedCar.status === 'available' && isAdmin && (
-                                        <button 
-                                            onClick={() => {
-                                                setSoldAccountId(accounts[0]?.id || '');
-                                                setIsMarkingSold(true);
-                                            }}
-                                            className="bg-brand-red px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest"
-                                        >
-                                            MARK AS SOLD
-                                        </button>
+                                        <>
+                                            <button 
+                                                onClick={() => updateInventoryItem(selectedCar.id, { status: 'reserved' })}
+                                                className="bg-amber-500 hover:bg-amber-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors"
+                                            >
+                                                RESERVE
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                    setSoldAccountId(accounts[0]?.id || '');
+                                                    setIsMarkingSold(true);
+                                                }}
+                                                className="bg-brand-red px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20"
+                                            >
+                                                MARK AS SOLD
+                                            </button>
+                                        </>
+                                    )}
+                                    {selectedCar.status === 'reserved' && isAdmin && (
+                                        <>
+                                            <button 
+                                                onClick={() => updateInventoryItem(selectedCar.id, { status: 'available' })}
+                                                className="bg-neutral-700 hover:bg-neutral-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors"
+                                            >
+                                                UNRESERVE
+                                            </button>
+                                            <button 
+                                                onClick={() => {
+                                                    setSoldAccountId(accounts[0]?.id || '');
+                                                    setIsMarkingSold(true);
+                                                }}
+                                                className="bg-brand-red px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-500/20"
+                                            >
+                                                MARK AS SOLD
+                                            </button>
+                                        </>
                                     )}
                                     {selectedCar.status === 'sold' && (
-                                        <div className="bg-green-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                                        <div className="bg-emerald-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">
                                             COMPLETED VEHICLE
                                         </div>
                                     )}

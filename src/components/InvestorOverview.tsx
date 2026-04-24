@@ -62,7 +62,16 @@ export const InvestorOverview = () => {
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
 
-    const personalNetProfit = personalTotalSales - personalTotalExpenses;
+    const personalOtherIncome = myTransactions
+        .filter(t => t.type === 'income' && t.category !== 'Car Sale' && t.category !== 'Owner Investment')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const personalInventoryValue = myCars
+        .filter(i => i.status !== 'sold')
+        .reduce((sum, i) => sum + i.purchasePrice, 0);
+
+    // Personal Position = (Personal Cash Flow) + (Unsold Asset Value)
+    const personalNetProfit = (personalTotalSales + personalOtherIncome - personalTotalExpenses) + personalInventoryValue;
     const investorShare = personalNetProfit / 2;
 
     const totalSales = transactions
