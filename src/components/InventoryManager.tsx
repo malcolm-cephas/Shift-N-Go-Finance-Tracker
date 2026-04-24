@@ -227,7 +227,8 @@ export const InventoryManager = () => {
     const selectedCarStats = selectedCar ? calculateCarStats(selectedCar, transactions) : null;
 
     return (
-        <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+        <>
+        <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8 print:hidden">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Vehicle Inventory</h1>
@@ -969,8 +970,10 @@ export const InventoryManager = () => {
                 </div>
             )}
 
-            {/* PRINTABLE BILL (Hidden in Web View) */}
-            {selectedCar && (
+        </div>
+
+        {/* PRINTABLE BILL (Hidden in Web View) */}
+        {selectedCar && (
                 <div className="hidden print:block bg-white text-black p-16 font-sans min-h-screen relative overflow-hidden">
                     {/* Official Border / Watermark Detail */}
                     <div className="absolute inset-4 border border-black/5 pointer-events-none" />
@@ -1112,6 +1115,6 @@ export const InventoryManager = () => {
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
