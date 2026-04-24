@@ -121,16 +121,21 @@ const Navigation = () => {
                   </button>
                   {activeDropdown === 'inventory' && (
                     <div className="absolute left-0 mt-2 w-48 rounded-md bg-[#F8F8F8] shadow-2xl border border-gray-100 z-[110]">
-                      {inventoryItems.map(item => (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setActiveDropdown(null)}
-                          className={`block px-4 py-3 text-sm font-medium hover:bg-white transition-colors ${pathname === item.href ? 'text-brand-red bg-white' : 'text-gray-700'}`}
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
+                      {inventoryItems
+                        .filter(item => {
+                          if (role === 'INVESTOR') return item.href === '/inventory';
+                          return true;
+                        })
+                        .map(item => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setActiveDropdown(null)}
+                            className={`block px-4 py-3 text-sm font-medium hover:bg-white transition-colors ${pathname === item.href ? 'text-brand-red bg-white' : 'text-gray-700'}`}
+                          >
+                            {item.label}
+                          </Link>
+                        ))}
                     </div>
                   )}
                 </div>
@@ -325,7 +330,12 @@ const Navigation = () => {
               ...(isAdminOrManager || role === 'INVESTOR' ? inventoryItems : []),
               ...(isAdminOrManager ? dailyLogItems : []),
               ...reportItems,
-            ].map((item) => {
+            ]
+              .filter(item => {
+                if (role === 'INVESTOR' && (item.href === '/add-account' || item.href === '/record-balances')) return false;
+                return true;
+              })
+              .map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link

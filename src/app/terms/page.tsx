@@ -21,7 +21,7 @@ const TermsPage = () => {
                         </div>
                         <div className="text-right">
                             <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Document ID: SNG-LEG-2026-001</p>
-                            <p className="text-[10px] font-black text-neutral-900 dark:text-white uppercase tracking-widest mt-1">Effective: April 07, 2026</p>
+                            <p className="text-[10px] font-black text-neutral-900 dark:text-white uppercase tracking-widest mt-1">Effective: April 24, 2026</p>
                         </div>
                     </div>
                 </header>

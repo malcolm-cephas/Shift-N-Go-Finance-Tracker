@@ -10,7 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 export const LogTransactions = () => {
     const { accounts, transactions, addTransaction, deleteTransaction, inventory, investorEmails, getNickname } = useFinance();
     const { formatCurrency } = useCurrency();
-    const { role } = useAuth();
+    const { role, user } = useAuth();
     const isReadOnly = role === 'INVESTOR';
 
     // Form State
@@ -56,10 +56,32 @@ export const LogTransactions = () => {
         setDate(new Date().toISOString().split('T')[0]);
     };
 
-    // Filtered and Sorted Logic
+    // Filtered and Sorted Logic with Role-Based Visibility
     const filteredTransactions = useMemo(() => {
         const searchStr = searchTerm.toLowerCase();
-        return transactions.filter(tx => {
+        const investorEmail = user?.email?.toLowerCase();
+        const isInvestor = role === 'INVESTOR';
+
+        // 1. First filter by Role (Privacy)
+        let visibleTransactions = transactions;
+        if (isInvestor && investorEmail) {
+            // Map of carId to its investor emails for efficient lookup
+            const carInvestorMap = new Map(inventory.map(c => [c.id, c.investorEmails?.map(e => e.toLowerCase()) || []]));
+            
+            visibleTransactions = transactions.filter(tx => {
+                // Check if investor is tagged directly in transaction
+                const isTaggedInTx = tx.investorEmails?.some(e => e.toLowerCase() === investorEmail);
+                
+                // Check if investor is tagged in the related vehicle
+                const relatedCarInvestors = tx.vehicleId ? carInvestorMap.get(tx.vehicleId) : [];
+                const isTaggedInVehicle = relatedCarInvestors?.includes(investorEmail);
+
+                return isTaggedInTx || isTaggedInVehicle;
+            });
+        }
+
+        // 2. Then filter by Search Term
+        return visibleTransactions.filter(tx => {
             const accountName = accounts.find(a => a.id === tx.accountId)?.name || '';
             const txDate = formatAppDate(new Date(tx.date));
             return (
@@ -70,7 +92,7 @@ export const LogTransactions = () => {
                 tx.amount.toString().includes(searchStr)
             );
         });
-    }, [transactions, searchTerm, accounts]);
+    }, [transactions, searchTerm, accounts, role, user, inventory]);
 
     const sortedTransactions = useMemo(() => {
         return [...filteredTransactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -218,29 +240,47 @@ export const LogTransactions = () => {
                                 </select>
                             </div>
 
-                            {/* Investor Multi-Select */}
+                            {/* Investor Multi-Select Dropdown */}
                             <div className="md:col-span-2">
                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investors</label>
-                                <div className="flex flex-wrap gap-3 p-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl">
-                                    {investorEmails.map(email => (
-                                        <label key={email} className="flex items-center gap-2 cursor-pointer group">
-                                            <input 
-                                                type="checkbox"
-                                                checked={selectedInvestorEmails.includes(email)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setSelectedInvestorEmails(prev => [...prev, email]);
-                                                    } else {
-                                                        setSelectedInvestorEmails(prev => prev.filter(e => e !== email));
-                                                    }
-                                                }}
-                                                className="w-5 h-5 rounded border-neutral-300 text-brand-red focus:ring-brand-red cursor-pointer"
-                                            />
-                                            <span className="text-xs font-bold text-gray-700 dark:text-neutral-300 group-hover:text-brand-red transition-colors">
-                                                {getNickname(email)}
-                                            </span>
-                                        </label>
-                                    ))}
+                                <div className="space-y-3">
+                                    <select
+                                        className="w-full px-3 py-2 border rounded-md dark:bg-neutral-700 dark:border-neutral-600 font-bold"
+                                        onChange={(e) => {
+                                            const email = e.target.value;
+                                            if (email && !selectedInvestorEmails.includes(email)) {
+                                                setSelectedInvestorEmails(prev => [...prev, email]);
+                                            }
+                                            e.target.value = ''; // Reset dropdown after selection
+                                        }}
+                                    >
+                                        <option value="">-- Add Investor Tag --</option>
+                                        {investorEmails.map(email => (
+                                            <option key={email} value={email}>
+                                                {getNickname(email)} ({email})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    
+                                    {selectedInvestorEmails.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 p-3 bg-gray-50 dark:bg-neutral-900/50 border border-dashed rounded-2xl">
+                                            {selectedInvestorEmails.map(email => (
+                                                <div 
+                                                    key={email} 
+                                                    className="flex items-center gap-2 bg-white dark:bg-neutral-800 border dark:border-neutral-700 px-3 py-1.5 rounded-full shadow-sm"
+                                                >
+                                                    <span className="text-[10px] font-black text-brand-red uppercase italic">👤 {getNickname(email)}</span>
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => setSelectedInvestorEmails(prev => prev.filter(e => e !== email))}
+                                                        className="text-gray-400 hover:text-brand-red transition-colors font-black text-xs"
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
