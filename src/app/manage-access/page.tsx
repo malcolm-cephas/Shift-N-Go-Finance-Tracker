@@ -93,19 +93,19 @@ export default function ManageAccessPage() {
     setCurrentPage(1);
   };
 
-  async function handleApprove(email: string, role: UserRole) {
+  async function handleApprove(email: string, role: UserRole, name?: string) {
     try {
       const res = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, role }),
+        body: JSON.stringify({ email, role, name }),
       });
       if (res.ok) {
-        setStatus({ type: 'success', message: `Access approved for ${email} as ${role}` });
+        setStatus({ type: 'success', message: name ? `Nickname updated for ${email}` : `Access approved for ${email} as ${role}` });
         fetchUsers();
       }
     } catch {
-      setStatus({ type: 'error', message: 'Failed to approve access' });
+      setStatus({ type: 'error', message: 'Failed to update user' });
     }
   }
 
@@ -183,6 +183,7 @@ export default function ManageAccessPage() {
                         <div>
                           <p className="text-[10px] font-black text-red-400 uppercase tracking-widest leading-none mb-1">New Connection Attempt</p>
                           <p className="text-lg font-black text-gray-900 dark:text-gray-100">{req.email}</p>
+                          {req.name && <p className="text-xs font-bold text-gray-500 italic mt-1">Requested Name: {req.name}</p>}
                         </div>
                       </div>
                       
@@ -251,14 +252,21 @@ export default function ManageAccessPage() {
             <div className="flex items-center gap-3 mb-6">
               <h2 className="text-sm font-bold text-gray-400 dark:text-neutral-500 uppercase tracking-[0.2em]">Manual Whitelist Grant</h2>
             </div>
-            <form onSubmit={handleAddUser} className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-neutral-50 dark:bg-neutral-900/50 p-6 rounded-[2rem] border border-neutral-100 dark:border-neutral-800">
+            <form onSubmit={handleAddUser} className="grid grid-cols-1 md:grid-cols-5 gap-4 bg-neutral-50 dark:bg-neutral-900/50 p-6 rounded-[2rem] border border-neutral-100 dark:border-neutral-800">
               <input
                 type="email"
                 placeholder="Direct Email Address"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 required
-                className="md:col-span-2 px-6 py-4 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-medium"
+                className="md:col-span-1 px-6 py-4 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-medium"
+              />
+              <input
+                type="text"
+                placeholder="Enter Nickname"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="md:col-span-1 px-6 py-4 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-medium"
               />
               <select
                 value={newRole}
@@ -271,7 +279,7 @@ export default function ManageAccessPage() {
               </select>
               <button
                 type="submit"
-                className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-black rounded-2xl py-4 shadow-xl transition-all active:scale-[0.98] uppercase tracking-widest text-xs"
+                className="md:col-span-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-black rounded-2xl py-4 shadow-xl transition-all active:scale-[0.98] uppercase tracking-widest text-xs"
               >
                 GRANT ACCESS
               </button>
@@ -348,8 +356,14 @@ export default function ManageAccessPage() {
                     {paginatedUsers.map((u) => (
                       <tr key={u.email} className="hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors group">
                         <td className="px-8 py-5">
-                          <p className="font-black text-gray-800 dark:text-neutral-100">{u.email}</p>
-                          <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-tighter">Verified Connection</p>
+                          <div className="flex flex-col">
+                            {u.name ? (
+                              <span className="font-black text-gray-900 dark:text-white text-lg leading-tight">{u.name}</span>
+                            ) : (
+                              <span className="font-black text-gray-400 italic text-sm italic">No Nickname Set</span>
+                            )}
+                            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-tighter">{u.email}</span>
+                          </div>
                         </td>
                         <td className="px-8 py-5 text-center">
                           <span className={`text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest ${
@@ -361,12 +375,25 @@ export default function ManageAccessPage() {
                           </span>
                         </td>
                         <td className="px-8 py-5 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => handleRevoke(u.email)}
-                            className="text-[10px] font-black text-neutral-300 hover:text-brand-red transition-colors uppercase tracking-widest"
-                          >
-                            REVOKE
-                          </button>
+                          <div className="flex justify-end gap-4">
+                            <button
+                              onClick={() => {
+                                const newNick = prompt('Enter new nickname for ' + u.email, u.name || '');
+                                if (newNick !== null) {
+                                  handleApprove(u.email, u.role, newNick);
+                                }
+                              }}
+                              className="text-[10px] font-black text-blue-500 hover:text-blue-700 uppercase tracking-widest"
+                            >
+                              EDIT NICKNAME
+                            </button>
+                            <button
+                              onClick={() => handleRevoke(u.email)}
+                              className="text-[10px] font-black text-neutral-300 hover:text-brand-red transition-colors uppercase tracking-widest"
+                            >
+                              REVOKE
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

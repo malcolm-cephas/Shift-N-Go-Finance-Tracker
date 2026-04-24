@@ -5,7 +5,7 @@ import { useFinance } from '@/context/FinanceContext';
 import { Account, AccountWithBalance } from '@/types/finance';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
-import { CurrencySelector } from './CurrencySelector';
+import { useAuth } from '@/context/AuthContext';
 import WelcomeScreen from './WelcomeScreen';
 import { ManageAccountModal } from './ManageAccountModal';
 import { ConfirmationModal } from './ui/ConfirmationModal';
@@ -149,10 +149,6 @@ export const BalanceSheet = () => {
           <p className="text-gray-600 dark:text-neutral-400" suppressHydrationWarning>
             As of {new Date().toLocaleDateString()}
           </p>
-        </div>
-        {/* Currency Selection */}
-        <div className="mb-8 flex justify-end">
-          <CurrencySelector size="sm" />
         </div>
         {groupedAccounts.asset && (
           <AccountSection

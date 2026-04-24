@@ -5,16 +5,16 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { TRANSACTION_CATEGORIES } from '@/types/finance';
-import { CurrencySelector } from '@/components/CurrencySelector';
 
 export default function TransactionsMasterPage() {
-    const { transactions, accounts } = useFinance();
+    const { transactions, accounts, inventory } = useFinance();
     const { formatCurrency } = useCurrency();
 
     // -- Filter State --
     const [searchTerm, setSearchTerm] = useState('');
     const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
+    const [vehicleFilter, setVehicleFilter] = useState('all');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     
@@ -44,7 +44,10 @@ export default function TransactionsMasterPage() {
             // 3. Category Filter
             const matchesCategory = categoryFilter === 'all' || tx.category === categoryFilter;
 
-            // 4. Date Filter
+            // 4. Vehicle Filter
+            const matchesVehicle = vehicleFilter === 'all' || tx.vehicleId === vehicleFilter;
+
+            // 5. Date Filter
             let matchesDate = true;
             if (startDate) {
                 const sDate = new Date(startDate);
@@ -57,9 +60,9 @@ export default function TransactionsMasterPage() {
                 if (txDate > eDate) matchesDate = false;
             }
 
-            return matchesSearch && matchesType && matchesCategory && matchesDate;
+            return matchesSearch && matchesType && matchesCategory && matchesVehicle && matchesDate;
         });
-    }, [transactions, searchTerm, typeFilter, categoryFilter, startDate, endDate, accounts]);
+    }, [transactions, searchTerm, typeFilter, categoryFilter, vehicleFilter, startDate, endDate, accounts]);
 
     // -- Sorting (Most recent first) --
     const sortedTransactions = useMemo(() => {
@@ -101,7 +104,6 @@ export default function TransactionsMasterPage() {
                         <p className="text-xs font-black text-neutral-400 uppercase tracking-[0.3em]">Full Audit Trail & Financial Transparency</p>
                     </div>
                     <div className="flex flex-col items-end gap-3 w-full md:w-auto">
-                        <CurrencySelector size="sm" />
                         <div className="px-4 py-2 bg-neutral-50 dark:bg-neutral-900 rounded-2xl border border-dashed border-neutral-200 dark:border-neutral-700">
                            <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest whitespace-nowrap">
                              Total Matching Logs: <span className="text-gray-900 dark:text-white ml-1">{filteredTransactions.length}</span>
@@ -185,6 +187,23 @@ export default function TransactionsMasterPage() {
                             </select>
                         </div>
 
+                        {/* Vehicle Filter */}
+                        <div>
+                            <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2 ml-2">Vehicle / Unit</label>
+                            <select
+                                value={vehicleFilter}
+                                onChange={(e) => { setVehicleFilter(e.target.value); setCurrentPage(1); }}
+                                className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-900/50 border dark:border-neutral-700 rounded-2xl text-xs font-black uppercase outline-none focus:ring-2 focus:ring-brand-red transition-all"
+                            >
+                                <option value="all">ALL VEHICLES</option>
+                                {inventory.map(car => (
+                                    <option key={car.id} value={car.id}>
+                                        {car.name} {car.licensePlate ? `(${car.licensePlate})` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
                         {/* Items Per Page Selector */}
                         <div>
                             <label className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2 ml-2">Display Density</label>
@@ -234,6 +253,11 @@ export default function TransactionsMasterPage() {
                                         </td>
                                         <td className="px-8 py-5">
                                             <p className="text-xs font-bold text-gray-800 dark:text-neutral-200">{tx.description || 'General Entry'}</p>
+                                            {tx.vehicleId && (
+                                                <p className="text-[10px] text-brand-red font-black uppercase tracking-tight mt-1">
+                                                    UNIT: {inventory.find(i => i.id === tx.vehicleId)?.name}
+                                                </p>
+                                            )}
                                         </td>
                                         <td className="px-8 py-5">
                                             <span className={`text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest inline-block border ${

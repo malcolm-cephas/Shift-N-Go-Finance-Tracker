@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 export interface Currency {
   code: string;
@@ -10,16 +10,7 @@ export interface Currency {
 }
 
 export const SUPPORTED_CURRENCIES: Currency[] = [
-  { code: 'USD', name: 'US Dollar', symbol: '$', locale: 'en-US' },
-  { code: 'GBP', name: 'British Pound', symbol: '£', locale: 'en-GB' },
-  { code: 'EUR', name: 'Euro', symbol: '€', locale: 'en-EU' },
-  { code: 'JPY', name: 'Japanese Yen', symbol: '¥', locale: 'ja-JP' },
-  { code: 'CAD', name: 'Canadian Dollar', symbol: 'C$', locale: 'en-CA' },
-  { code: 'AUD', name: 'Australian Dollar', symbol: 'A$', locale: 'en-AU' },
-  { code: 'CHF', name: 'Swiss Franc', symbol: 'CHF', locale: 'de-CH' },
-  { code: 'CNY', name: 'Chinese Yuan', symbol: '¥', locale: 'zh-CN' },
   { code: 'INR', name: 'Indian Rupee', symbol: '₹', locale: 'en-IN' },
-  { code: 'KRW', name: 'South Korean Won', symbol: '₩', locale: 'ko-KR' },
 ];
 
 interface CurrencyContextType {
@@ -39,23 +30,11 @@ export const useCurrency = () => {
 };
 
 export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [selectedCurrency, setSelectedCurrencyState] = useState<Currency>(SUPPORTED_CURRENCIES[8]); // Default to INR
+  const [selectedCurrency] = useState<Currency>(SUPPORTED_CURRENCIES[0]);
 
-  // Load currency preference from localStorage on mount
-  useEffect(() => {
-    const savedCurrencyCode = localStorage.getItem('finance-currency');
-    if (savedCurrencyCode) {
-      const savedCurrency = SUPPORTED_CURRENCIES.find(currency => currency.code === savedCurrencyCode);
-      if (savedCurrency) {
-        setSelectedCurrencyState(savedCurrency);
-      }
-    }
-  }, []);
-
-  // Save to localStorage whenever currency changes
-  const setSelectedCurrency = (currency: Currency) => {
-    setSelectedCurrencyState(currency);
-    localStorage.setItem('finance-currency', currency.code);
+  // Logic to set currency is removed as only INR is supported
+  const setSelectedCurrency = () => {
+    console.warn('Currency changes are disabled. Only INR is supported.');
   };
 
   const formatCurrency = (amount: number): string => {
@@ -77,6 +56,3 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     </CurrencyContext.Provider>
   );
 };
-
-
-

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Account, Balance, Transaction, InventoryItem, AccountWithBalance, AccountWithHistory } from '@/types/finance';
 import { isCloudSyncAllowed } from '@/lib/offline';
+import { getUniqueInvestorEmails } from '@/utils/financeUtils';
 
 interface FinanceContextType {
   accounts: Account[];
@@ -28,6 +29,9 @@ interface FinanceContextType {
   clearAllData: () => void;
   triggerCloudSync: () => Promise<void>;
   triggerRemoveCloudData: () => Promise<void>;
+  investorEmails: string[];
+  userNicknames: Record<string, string>;
+  getNickname: (email: string | undefined) => string;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -46,6 +50,32 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userNicknames, setUserNicknames] = useState<Record<string, string>>({});
+
+  const fetchNicknames = async () => {
+    try {
+      const res = await fetch('/api/users/nicknames');
+      if (res.ok) {
+        const data = await res.json();
+        const nicknames: Record<string, string> = {};
+        data.forEach((u: { email: string; name?: string }) => {
+          if (u.name) nicknames[u.email.toLowerCase()] = u.name;
+        });
+        setUserNicknames(nicknames);
+      }
+    } catch (error) {
+      console.error('Failed to fetch nicknames:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNicknames();
+  }, []);
+
+  const getNickname = (email: string | undefined): string => {
+    if (!email) return 'Unknown';
+    return userNicknames[email.toLowerCase()] || email;
+  };
 
   // Load data from API on mount
   useEffect(() => {
@@ -459,6 +489,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }
 
+    const investorEmails = getUniqueInvestorEmails(inventory, transactions);
+
   return (
     <FinanceContext.Provider
       value={{
@@ -466,6 +498,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         balances,
         transactions,
         inventory,
+        investorEmails,
+        userNicknames,
+        getNickname,
         isLoading,
         addAccount,
         updateBalance,

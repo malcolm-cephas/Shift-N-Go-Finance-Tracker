@@ -1,7 +1,9 @@
+export type AccountType = 'asset' | 'liability' | 'equity';
+
 export interface Account {
   id: string;
   name: string;
-  type: 'asset' | 'liability' | 'equity';
+  type: AccountType;
   category: string;
   createdAt: Date;
 }
@@ -46,9 +48,6 @@ export interface AccountWithHistory extends Account {
   balanceHistory: { date: Date; amount: number }[];
 }
 
-export type AccountType = 'asset' | 'liability' | 'equity';
-
-export interface ACCOUNT_CATEGORIES_TYPE {
   asset: string[];
   liability: string[];
   equity: string[];

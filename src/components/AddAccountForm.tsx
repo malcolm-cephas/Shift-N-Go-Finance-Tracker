@@ -22,8 +22,14 @@ export const AddAccountForm = ({ onSuccess }: AddAccountFormProps) => {
     setFormData({
       ...formData,
       type: newType,
-      category: ACCOUNT_CATEGORIES[newType][0], // Set default category
+      category: ACCOUNT_CATEGORIES[newType][0],
     });
+  };
+
+  const typeExplanations = {
+    asset: "Things the business OWNS (Cars, Bank Balance, Cash).",
+    liability: "Things the business OWES to others (Loans, Vendor Bills).",
+    equity: "Your/Investor stake in the business (Initial Capital, Retained Profits)."
   };
 
   const handleSubmit = (e: FormEvent) => {
@@ -79,10 +85,13 @@ export const AddAccountForm = ({ onSuccess }: AddAccountFormProps) => {
           onChange={(e) => handleTypeChange(e.target.value as AccountType)}
           className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
         >
-          <option value="asset">Asset</option>
-          <option value="liability">Liability</option>
-          <option value="equity">Equity</option>
+          <option value="asset">Asset (Own)</option>
+          <option value="liability">Liability (Owe)</option>
+          <option value="equity">Equity (Stake)</option>
         </select>
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-brand-red animate-pulse">
+          💡 {typeExplanations[formData.type]}
+        </p>
       </div>
 
       <div>
@@ -95,7 +104,7 @@ export const AddAccountForm = ({ onSuccess }: AddAccountFormProps) => {
           onChange={(e) => setFormData({ ...formData, category: e.target.value })}
           className="w-full px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
         >
-          {ACCOUNT_CATEGORIES[formData.type].map((category) => (
+          {ACCOUNT_CATEGORIES[formData.type].map((category: string) => (
             <option key={category} value={category}>
               {category}
             </option>

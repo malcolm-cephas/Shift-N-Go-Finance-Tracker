@@ -3,12 +3,13 @@
 import { useState, useMemo } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { TRANSACTION_CATEGORIES } from '@/types/finance';
+import { formatAppDate } from '@/utils/financeUtils';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
-import { CurrencySelector } from './CurrencySelector';
+import { useAuth } from '@/context/AuthContext';
 
 export const LogTransactions = () => {
-    const { accounts, transactions, addTransaction, deleteTransaction, inventory } = useFinance();
+    const { accounts, transactions, addTransaction, deleteTransaction, inventory, investorEmails, getNickname } = useFinance();
     const { formatCurrency } = useCurrency();
     const { role } = useAuth();
     const isReadOnly = role === 'INVESTOR';
@@ -28,13 +29,6 @@ export const LogTransactions = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const itemsPerPage = 20;
 
-    const formatAppDate = (dateObj: Date) => {
-        return dateObj.toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-    };
 
     const handleTypeChange = (newType: 'income' | 'expense') => {
         setType(newType);
@@ -98,9 +92,6 @@ export const LogTransactions = () => {
                     Log Business Transactions
                 </h1>
 
-                <div className="flex justify-end mb-4">
-                    <CurrencySelector size="sm" />
-                </div>
 
                 {!isReadOnly && (
                     <form onSubmit={handleSubmit} className="space-y-4 bg-gray-50 dark:bg-neutral-700/30 p-4 rounded-lg">
@@ -242,11 +233,8 @@ export const LogTransactions = () => {
                                     placeholder="investor@example.com"
                                 />
                                 <datalist id="investor-emails">
-                                    {Array.from(new Set([
-                                        ...inventory.map(i => i.investorEmail),
-                                        ...transactions.map(t => t.investorEmail)
-                                    ].filter(Boolean))).map(email => (
-                                        <option key={email} value={email!} />
+                                    {investorEmails.map(email => (
+                                        <option key={email} value={email}>{getNickname(email)}</option>
                                     ))}
                                 </datalist>
                             </div>
@@ -316,7 +304,7 @@ export const LogTransactions = () => {
                                             <div className="text-[10px] uppercase font-bold text-gray-400 flex flex-wrap gap-2">
                                                 <span>{accounts.find(a => a.id === tx.accountId)?.name}</span>
                                                 {tx.investorEmail && (
-                                                    <span className="text-blue-500 italic">👤 {tx.investorEmail}</span>
+                                                    <span className="text-blue-500 italic" title={tx.investorEmail}>👤 {getNickname(tx.investorEmail)}</span>
                                                 )}
                                             </div>
                                         </td>

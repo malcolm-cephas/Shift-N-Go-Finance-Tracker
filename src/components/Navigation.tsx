@@ -19,21 +19,20 @@ const Navigation = () => {
   const isAdminOrManager = role === 'ADMIN' || role === 'MANAGER';
 
   const inventoryItems = [
-    { href: '/inventory', label: 'Vehicle Inventory' },
-    { href: '/add-account', label: 'Business Vehicles' },
-    { href: '/record-balances', label: 'Inventory Balances' },
+    { href: '/inventory', label: 'Inventory Overview (Cars)' },
+    { href: '/add-account', label: 'Setup Business Accounts' },
+    { href: '/record-balances', label: 'Update Closing Balances' },
   ];
 
-  const accountingItems = [
-    { href: '/log-expenses', label: 'Record Transactions' },
-    { href: '/bank-statements', label: 'Import Statements' },
+  const dailyLogItems = [
+    { href: '/log-expenses', label: 'Log New Transaction' },
+    { href: '/bank-statements', label: 'Import Bank Statements' },
   ];
 
-  const analyticsItems = [
-    { href: '/investor-dashboard', label: 'Investor Report' },
-    { href: '/inventory', label: 'Vehicle Portfolio' },
-    { href: '/transactions', label: 'Master History' },
-    { href: '/historical', label: 'Performance Charts' },
+  const reportItems = [
+    { href: '/investor-dashboard', label: 'Investor Profit Report' },
+    { href: '/transactions', label: 'Complete Audit Trail' },
+    { href: '/historical', label: 'Growth & Performance' },
   ];
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -142,19 +141,19 @@ const Navigation = () => {
                 <div className="relative">
                   <button
                     onClick={() => setActiveDropdown(activeDropdown === 'accounting' ? null : 'accounting')}
-                    className={`px-3 py-2 rounded-md text-sm font-bold transition-colors uppercase tracking-tight flex items-center space-x-1 ${accountingItems.some(i => i.href === pathname)
+                    className={`px-3 py-2 rounded-md text-sm font-bold transition-colors uppercase tracking-tight flex items-center space-x-1 ${dailyLogItems.some(i => i.href === pathname)
                       ? 'text-brand-red'
                       : 'text-gray-700 hover:bg-gray-100'
                       }`}
                   >
-                    <span>Operations</span>
+                    <span>Daily Logs</span>
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                   {activeDropdown === 'accounting' && (
                     <div className="absolute left-0 mt-2 w-52 rounded-md bg-[#F8F8F8] shadow-2xl border border-gray-100 z-[110]">
-                      {accountingItems.map(item => (
+                      {dailyLogItems.map(item => (
                         <Link
                           key={item.href}
                           href={item.href}
@@ -173,19 +172,19 @@ const Navigation = () => {
               <div className="relative">
                 <button
                   onClick={() => setActiveDropdown(activeDropdown === 'analytics' ? null : 'analytics')}
-                  className={`px-3 py-2 rounded-md text-sm font-bold transition-colors uppercase tracking-tight flex items-center space-x-1 ${analyticsItems.some(i => i.href === pathname)
+                  className={`px-3 py-2 rounded-md text-sm font-bold transition-colors uppercase tracking-tight flex items-center space-x-1 ${reportItems.some(i => i.href === pathname)
                     ? 'text-brand-red'
                     : 'text-gray-700 hover:bg-gray-100'
                     }`}
                 >
-                  <span>Analytics</span>
+                  <span>Reports</span>
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
                 {activeDropdown === 'analytics' && (
                   <div className="absolute right-0 mt-2 w-48 rounded-md bg-[#F8F8F8] shadow-2xl border border-gray-100 z-[110]">
-                    {analyticsItems.map(item => (
+                    {reportItems.map(item => (
                       <Link
                         key={item.href}
                         href={item.href}
@@ -322,10 +321,10 @@ const Navigation = () => {
             </div>
             {/* Main Nav Items */}
             {[
-              { href: '/', label: 'Balance Sheet Summary' },
+              { href: '/', label: 'Business Summary' },
               ...(isAdminOrManager ? inventoryItems : []),
-              ...(isAdminOrManager ? accountingItems : []),
-              ...analyticsItems,
+              ...(isAdminOrManager ? dailyLogItems : []),
+              ...reportItems,
             ].map((item) => {
               const isActive = pathname === item.href;
               return (

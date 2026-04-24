@@ -5,7 +5,6 @@ import { useFinance } from '@/context/FinanceContext';
 import { BalanceChart } from './BalanceChart';
 import { NetWorthChart } from './NetWorthChart';
 import { useCurrency } from '@/context/CurrencyContext';
-import { CurrencySelector } from './CurrencySelector';
 
 export const HistoricalTracking = () => {
   const { accounts, balances, isLoading } = useFinance();
@@ -122,11 +121,6 @@ export const HistoricalTracking = () => {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-neutral-100 mb-2">Business Performance Tracking</h1>
           <p className="text-gray-600 dark:text-neutral-400">View balance trends and historical data for your business units</p>
-        </div>
-
-        {/* Currency Selection */}
-        <div className="mb-6 flex justify-end">
-          <CurrencySelector size="sm" />
         </div>
 
         {/* Controls */}

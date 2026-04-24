@@ -5,9 +5,10 @@ import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
 import { InventoryItem } from '@/types/finance';
+import { calculateCarStats } from '@/utils/financeUtils';
 
 export const InventoryManager = () => {
-    const { accounts, inventory, transactions, addInventoryItem, updateInventoryItem, deleteInventoryItem, addTransaction } = useFinance();
+    const { accounts, inventory, transactions, addInventoryItem, updateInventoryItem, deleteInventoryItem, addTransaction, investorEmails, getNickname } = useFinance();
     const { formatCurrency } = useCurrency();
     const { role, user } = useAuth();
     const isAdmin = role === 'ADMIN' || role === 'MANAGER';
@@ -35,6 +36,11 @@ export const InventoryManager = () => {
     const [soldPrice, setSoldPrice] = useState('');
     const [soldComm, setSoldComm] = useState('0');
     const [soldAccountId, setSoldAccountId] = useState('');
+    
+    // Edit/Delete State
+    const [isEditing, setIsEditing] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteConfirmation, setDeleteConfirmation] = useState('');
 
     const handleAddCar = (e: React.FormEvent) => {
         e.preventDefault();
@@ -73,7 +79,7 @@ export const InventoryManager = () => {
             soldAt: new Date()
         });
 
-        // 2. Automatically Log Transaction
+        // 2. Automatically Log Transaction (Income)
         addTransaction({
             accountId: soldAccountId,
             vehicleId: car.id,
@@ -85,33 +91,58 @@ export const InventoryManager = () => {
             date: new Date()
         });
 
+        // 3. Automatically Log Broker Commission (Expense) if applicable
+        if (comm > 0) {
+            addTransaction({
+                accountId: soldAccountId,
+                vehicleId: car.id,
+                investorEmail: car.investorEmail,
+                amount: comm,
+                type: 'expense',
+                category: 'Broker Commission',
+                description: `Selling Broker Commission for ${car.name}`,
+                date: new Date()
+            });
+        }
+
         setIsMarkingSold(false);
         setSoldPrice('');
         setSoldComm('0');
         setSoldAccountId('');
     };
 
-    const calculateCarStats = (car: InventoryItem) => {
-        const carTx = getCarTransactions(car.id);
-        const otherExpenses = carTx
-            .filter(t => t.type === 'expense')
-            .reduce((sum, t) => sum + t.amount, 0);
-        
-        const totalCosting = car.purchasePrice + otherExpenses;
-        const soldPrice = car.salePrice || 0;
-        const brokerComm = car.sellingBrokerCommission || 0;
-        const netProfit = soldPrice > 0 ? (soldPrice - totalCosting - brokerComm) : 0;
-
-        return {
-            otherExpenses,
-            totalCosting,
-            netProfit,
-            profitPerPerson: netProfit / 2
-        };
+    const handleEditCarSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedCarId) return;
+        updateInventoryItem(selectedCarId, {
+            name,
+            purchasePrice: parseFloat(purchasePrice),
+            licensePlate: licensePlate || undefined,
+            investorEmail: investorEmail || undefined,
+        });
+        setIsEditing(false);
     };
 
+    const handleDeleteCar = () => {
+        if (!selectedCarId || deleteConfirmation !== 'Shift N Go') return;
+        deleteInventoryItem(selectedCarId);
+        setSelectedCarId(null);
+        setIsDeleting(false);
+        setDeleteConfirmation('');
+    };
+
+    const startEditing = () => {
+        if (!selectedCar) return;
+        setName(selectedCar.name);
+        setPurchasePrice(selectedCar.purchasePrice.toString());
+        setLicensePlate(selectedCar.licensePlate || '');
+        setInvestorEmail(selectedCar.investorEmail || '');
+        setIsEditing(true);
+    };
+
+
     const selectedCar = inventory.find(c => c.id === selectedCarId);
-    const selectedCarStats = selectedCar ? calculateCarStats(selectedCar) : null;
+    const selectedCarStats = selectedCar ? calculateCarStats(selectedCar, transactions) : null;
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 p-6">
@@ -176,11 +207,8 @@ export const InventoryManager = () => {
                                 className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
                             />
                             <datalist id="investor-emails">
-                                {Array.from(new Set([
-                                    ...inventory.map(i => i.investorEmail),
-                                    ...transactions.map(t => t.investorEmail)
-                                ].filter(Boolean))).map(email => (
-                                    <option key={email} value={email!} />
+                                {investorEmails.map(email => (
+                                    <option key={email} value={email}>{getNickname(email)}</option>
                                 ))}
                             </datalist>
                         </div>
@@ -200,7 +228,7 @@ export const InventoryManager = () => {
                         </div>
                     )}
                     {displayInventory.map(car => {
-                        const stats = calculateCarStats(car);
+                        const stats = calculateCarStats(car, transactions);
                         return (
                             <button 
                                 key={car.id}
@@ -239,8 +267,11 @@ export const InventoryManager = () => {
                                 </div>
                                 {car.investorEmail && (
                                     <div className={`mt-4 pt-4 border-t ${selectedCarId === car.id ? 'border-white/20' : 'border-neutral-50 dark:border-neutral-700'}`}>
-                                        <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${selectedCarId === car.id ? 'text-white' : 'text-gray-500'}`}>
-                                            👤 {car.investorEmail}
+                                        <p 
+                                            className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-2 ${selectedCarId === car.id ? 'text-white' : 'text-gray-500'}`}
+                                            title={car.investorEmail}
+                                        >
+                                            👤 {getNickname(car.investorEmail)}
                                         </p>
                                     </div>
                                 )}
@@ -262,10 +293,38 @@ export const InventoryManager = () => {
                                     )}
                                     <div>
                                         <h2 className="text-3xl font-black uppercase tracking-tighter">{selectedCar.name}</h2>
-                                        <p className="text-xs font-bold text-red-400 uppercase tracking-[0.3em] mt-1 italic leading-none">Vehicle Operational Sheet</p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <p className="text-xs font-bold text-red-400 uppercase tracking-[0.3em] italic leading-none">Vehicle Operational Sheet</p>
+                                            {selectedCar.investorEmail && (
+                                                <span 
+                                                    className="text-[10px] font-black text-gray-500 bg-gray-100 dark:bg-neutral-800 px-2 py-0.5 rounded uppercase tracking-widest border dark:border-neutral-700"
+                                                    title={selectedCar.investorEmail}
+                                                >
+                                                    👤 {getNickname(selectedCar.investorEmail)}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="text-right">
+                                <div className="flex items-center gap-4">
+                                    {isAdmin && (
+                                        <>
+                                            <button 
+                                                onClick={startEditing}
+                                                className="p-2 text-gray-400 hover:text-white transition-colors"
+                                                title="Edit Vehicle"
+                                            >
+                                                ✏️
+                                            </button>
+                                            <button 
+                                                onClick={() => setIsDeleting(true)}
+                                                className="p-2 text-gray-400 hover:text-brand-red transition-colors"
+                                                title="Delete Vehicle"
+                                            >
+                                                🗑️
+                                            </button>
+                                        </>
+                                    )}
                                     {selectedCar.status === 'available' && isAdmin && (
                                         <button 
                                             onClick={() => {
@@ -423,6 +482,120 @@ export const InventoryManager = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Vehicle Modal */}
+            {isEditing && selectedCar && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-neutral-800 p-8 rounded-[2.5rem] shadow-2xl max-w-2xl w-full border-2 border-brand-red">
+                        <h3 className="text-2xl font-black uppercase tracking-tighter mb-6">Update Vehicle Details</h3>
+                        <form onSubmit={handleEditCarSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="md:col-span-2">
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Car Name / Model</label>
+                                <input 
+                                    type="text" 
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                                    required 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Purchase Price</label>
+                                <input 
+                                    type="number" 
+                                    value={purchasePrice}
+                                    onChange={(e) => setPurchasePrice(e.target.value)}
+                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                                    required 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Number Plate</label>
+                                <input 
+                                    type="text" 
+                                    value={licensePlate}
+                                    onChange={(e) => setLicensePlate(e.target.value)}
+                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold uppercase"
+                                />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investor (Email)</label>
+                                <input 
+                                    type="email" 
+                                    list="investor-emails"
+                                    value={investorEmail}
+                                    onChange={(e) => setInvestorEmail(e.target.value)}
+                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                                />
+                            </div>
+                            <div className="md:col-span-2 flex gap-4 pt-4">
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsEditing(false)}
+                                    className="flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-xs bg-gray-100 text-gray-500"
+                                >
+                                    CANCEL
+                                </button>
+                                <button 
+                                    type="submit"
+                                    className="flex-[2] py-4 rounded-2xl font-black uppercase tracking-widest text-xs bg-brand-red text-white shadow-lg"
+                                >
+                                    SAVE UPDATES
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Confirm Delete Modal */}
+            {isDeleting && selectedCar && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                    <div className="bg-white dark:bg-neutral-800 p-10 rounded-[3rem] shadow-2xl max-w-md w-full border-4 border-brand-red animate-in zoom-in-95 duration-200">
+                        <div className="text-center mb-8">
+                            <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 text-brand-red rounded-full flex items-center justify-center text-4xl mx-auto mb-6">⚠️</div>
+                            <h3 className="text-3xl font-black uppercase tracking-tighter mb-2 text-gray-900 dark:text-white">Dangerous Action</h3>
+                            <p className="text-gray-500 dark:text-neutral-400 text-sm font-bold leading-relaxed">
+                                You are about to permanently delete <span className="text-brand-red font-black underline decoration-2 underline-offset-4">{selectedCar.name}</span>. This will remove all associated logs and profitability data.
+                            </p>
+                        </div>
+                        
+                        <div className="space-y-6">
+                            <div className="bg-gray-50 dark:bg-neutral-900/50 p-4 rounded-2xl border-2 border-dashed border-gray-200 dark:border-neutral-700">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mb-3">Type the following to confirm</p>
+                                <p className="text-xl font-black text-center text-gray-900 dark:text-white tracking-[0.2em]">Shift N Go</p>
+                            </div>
+
+                            <input 
+                                type="text" 
+                                value={deleteConfirmation}
+                                onChange={(e) => setDeleteConfirmation(e.target.value)}
+                                placeholder="Enter verification text"
+                                className="w-full px-6 py-4 bg-white dark:bg-neutral-800 border-2 border-neutral-200 dark:border-neutral-700 rounded-2xl outline-none font-bold text-center focus:border-brand-red transition-all"
+                            />
+
+                            <div className="flex flex-col gap-3">
+                                <button 
+                                    onClick={handleDeleteCar}
+                                    disabled={deleteConfirmation !== 'Shift N Go'}
+                                    className="w-full py-5 rounded-2xl font-black uppercase tracking-widest text-sm bg-brand-red text-white shadow-xl shadow-red-500/20 disabled:opacity-30 disabled:grayscale transition-all active:scale-95"
+                                >
+                                    CONFIRM PERMANENT DELETE
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        setIsDeleting(false);
+                                        setDeleteConfirmation('');
+                                    }}
+                                    className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
+                                >
+                                    I CHANGED MY MIND (CANCEL)
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

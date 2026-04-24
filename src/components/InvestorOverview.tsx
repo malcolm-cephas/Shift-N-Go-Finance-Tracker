@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
-import { CurrencySelector } from './CurrencySelector';
+import { calculateCarStats } from '@/utils/financeUtils';
 
 export const InvestorOverview = () => {
     const { getAccountsWithBalances, transactions, inventory } = useFinance();
@@ -76,16 +76,15 @@ export const InvestorOverview = () => {
 
     const netProfit = (totalSales + otherIncome) - totalExpenses;
 
+    const realizedProfit = inventory
+        .filter(i => i.status === 'sold')
+        .reduce((sum, car) => sum + calculateCarStats(car, transactions).netProfit, 0);
+
     // Marketing/Aggregate Metadata
     const totalUnitsSold = inventory.filter(i => i.status === 'sold').length;
     const allSoldCarsProfit = inventory
         .filter(i => i.status === 'sold')
-        .reduce((sum, car) => {
-            const carTransactions = transactions.filter(t => t.vehicleId === car.id);
-            const carExpenses = carTransactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-            const carProfit = (car.salePrice || 0) - car.purchasePrice - carExpenses - (car.sellingBrokerCommission || 0);
-            return sum + carProfit;
-        }, 0);
+        .reduce((sum, car) => sum + calculateCarStats(car, transactions).netProfit, 0);
     
     const avgProfitPerUnit = totalUnitsSold > 0 ? allSoldCarsProfit / totalUnitsSold : 0;
 
@@ -140,7 +139,6 @@ export const InvestorOverview = () => {
                     <p className="text-lg text-gray-500 mt-2 font-medium">Shift N Go — {isSpecificInvestor ? 'Personalized Portfolio' : 'Full Dealership Aggregate'}</p>
                 </div>
                 <div className="flex flex-col items-center md:items-end gap-2">
-                    <CurrencySelector size="lg" />
                     <button
                         onClick={handlePrint}
                         className="bg-neutral-800 text-white px-4 py-2 rounded-md hover:bg-neutral-700 transition-colors text-sm print:hidden"
@@ -157,7 +155,7 @@ export const InvestorOverview = () => {
                     <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
                         <div>
                             <p className="text-red-400 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Active Portfolio Insight</p>
-                            <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">{user.name?.split(' ')[0]}'s Investment</h2>
+                            <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">{user.name || user.email?.split('@')[0]}'s Investment</h2>
                         </div>
                         <div className="flex gap-12 text-center md:text-left flex-wrap md:flex-nowrap justify-center md:justify-start">
                             <div>
@@ -192,9 +190,15 @@ export const InvestorOverview = () => {
                     <p className="text-2xl font-black text-red-900 dark:text-neutral-100 print:text-[14px] truncate">{formatCompact(totalExpenses)}</p>
                 </div>
                 <div className="bg-purple-50 dark:bg-neutral-800 p-6 rounded-xl border border-purple-100 dark:border-neutral-700 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">Company Net</p>
+                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">Company Net (Cashflow)</p>
                     <p className={`text-2xl font-black print:text-[14px] truncate ${netProfit >= 0 ? 'text-purple-900 dark:text-purple-100' : 'text-red-700'}`}>
                         {formatCompact(netProfit)}
+                    </p>
+                </div>
+                <div className="bg-blue-50 dark:bg-neutral-800 p-6 rounded-xl border border-blue-100 dark:border-neutral-700 print:bg-white print:border-neutral-200 print:p-3">
+                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Realized Profit (Sold Units)</p>
+                    <p className={`text-2xl font-black print:text-[14px] truncate ${realizedProfit >= 0 ? 'text-blue-900 dark:text-blue-100' : 'text-red-700'}`}>
+                        {formatCompact(realizedProfit)}
                     </p>
                 </div>
             </div>

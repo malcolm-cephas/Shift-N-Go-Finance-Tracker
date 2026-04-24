@@ -3,7 +3,6 @@
 import { useState, type ChangeEvent } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
-import { CurrencySelector } from './CurrencySelector';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/context/AuthContext';
 import { ConfirmationModal } from './ui/ConfirmationModal';
@@ -146,21 +145,6 @@ const Settings = () => {
         <ThemeToggle />
       </div>
 
-      {/* Currency Preferences */}
-      <div className="bg-gray-50 dark:bg-neutral-700/50 rounded-lg p-6">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-neutral-100 mb-4 uppercase tracking-wider text-brand-red">Currency Preferences</h2>
-        <p className="text-gray-600 dark:text-neutral-400 mb-4">
-          Select your preferred currency for displaying financial data. This will update all balance sheets and charts.
-        </p>
-        <div className="flex items-center space-x-4">
-          <div className="flex-1 max-w-xs">
-            <CurrencySelector showLabel={true} />
-          </div>
-          <div className="text-sm text-gray-500 dark:text-neutral-400">
-            Currently using: <span className="font-medium">{selectedCurrency.name} ({selectedCurrency.symbol})</span>
-          </div>
-        </div>
-      </div>
 
       {/* Data Overview */}
       <div className="bg-gray-50 dark:bg-neutral-700/50 rounded-lg p-6">
