@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useFinance } from '@/context/FinanceContext';
 import { TRANSACTION_CATEGORIES } from '@/types/finance';
 import { formatAppDate } from '@/utils/financeUtils';
@@ -8,7 +9,13 @@ import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
 
 export const LogTransactions = () => {
+    const searchParams = useSearchParams();
     const { accounts, transactions, addTransaction, deleteTransaction, inventory, investorEmails, getNickname } = useFinance();
+
+    useEffect(() => {
+        const vid = searchParams.get('vehicleId');
+        if (vid) setVehicleId(vid);
+    }, [searchParams]);
     const { formatCurrency } = useCurrency();
     const { role, user } = useAuth();
     const isReadOnly = role === 'INVESTOR';

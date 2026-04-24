@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
@@ -8,6 +9,7 @@ import { InventoryItem } from '@/types/finance';
 import { calculateCarStats, formatAppDate } from '@/utils/financeUtils';
 
 export const InventoryManager = () => {
+    const router = useRouter();
     const { accounts, inventory, transactions, addInventoryItem, updateInventoryItem, deleteInventoryItem, addTransaction, investorEmails, getNickname } = useFinance();
     const { formatCurrency } = useCurrency();
     const { role, user } = useAuth();
@@ -213,7 +215,10 @@ export const InventoryManager = () => {
                                 onClick={() => setStatusFilter(s)}
                                 className={`px-4 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                                     statusFilter === s 
-                                    ? 'bg-white dark:bg-neutral-700 shadow-md text-brand-red' 
+                                    ? s === 'available' ? 'bg-brand-red text-white shadow-lg'
+                                      : s === 'reserved' ? 'bg-amber-500 text-white shadow-lg'
+                                      : s === 'sold' ? 'bg-emerald-500 text-white shadow-lg'
+                                      : 'bg-neutral-900 dark:bg-neutral-600 text-white shadow-lg'
                                     : 'text-neutral-400 hover:text-gray-900 dark:hover:text-white'
                                 }`}
                             >
@@ -415,13 +420,29 @@ export const InventoryManager = () => {
                                                                                     {formatCurrency(stats.totalCosting)}
                                                                                 </p>
                                                                             </div>
-                                                                            {car.status === 'sold' && (
+                                                                            {car.status === 'sold' ? (
                                                                                 <div className="space-y-1">
                                                                                     <p className={`text-[9px] font-black uppercase tracking-[0.1em] ${isSelected ? 'text-emerald-400' : 'text-neutral-400'}`}>Profit</p>
                                                                                     <p className={`text-sm font-black tabular-nums ${isSelected ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-500'}`}>
                                                                                         +{formatCurrency(stats.netProfit)}
                                                                                     </p>
                                                                                 </div>
+                                                                            ) : (
+                                                                                isAdmin && (
+                                                                                    <button 
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            router.push(`/log-expenses?vehicleId=${car.id}`);
+                                                                                        }}
+                                                                                        className={`mt-auto py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all ${
+                                                                                            isSelected 
+                                                                                            ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' 
+                                                                                            : 'bg-neutral-50 border-neutral-100 text-neutral-400 hover:border-brand-red hover:text-brand-red'
+                                                                                        }`}
+                                                                                    >
+                                                                                        + ADD EXPENSE
+                                                                                    </button>
+                                                                                )
                                                                             )}
                                                                         </div>
                                                                     </button>
