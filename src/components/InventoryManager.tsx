@@ -144,8 +144,10 @@ export const InventoryManager = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'reserved' | 'sold'>('available');
     const [expandedBrands, setExpandedBrands] = useState<string[]>([]);
+    const [expandedModels, setExpandedModels] = useState<string[]>([]);
 
     const getBrand = (name: string) => name.split(' ')[0] || 'Unknown';
+    const getModel = (name: string) => name.split(' ').slice(1).join(' ') || 'Standard';
 
     const filteredInventory = useMemo(() => {
         return displayInventory.filter(car => {
@@ -157,11 +159,13 @@ export const InventoryManager = () => {
     }, [displayInventory, searchTerm, statusFilter]);
 
     const groupedInventory = useMemo(() => {
-        const groups: Record<string, InventoryItem[]> = {};
+        const groups: Record<string, Record<string, InventoryItem[]>> = {};
         filteredInventory.forEach(car => {
             const brand = getBrand(car.name);
-            if (!groups[brand]) groups[brand] = [];
-            groups[brand].push(car);
+            const model = getModel(car.name);
+            if (!groups[brand]) groups[brand] = {};
+            if (!groups[brand][model]) groups[brand][model] = [];
+            groups[brand][model].push(car);
         });
         return groups;
     }, [filteredInventory]);
@@ -172,10 +176,22 @@ export const InventoryManager = () => {
         );
     };
 
+    const toggleModel = (modelKey: string) => {
+        setExpandedModels(prev => 
+            prev.includes(modelKey) ? prev.filter(m => m !== modelKey) : [...prev, modelKey]
+        );
+    };
+
     // Auto-expand folder if search is active
     useEffect(() => {
         if (searchTerm) {
-            setExpandedBrands(Object.keys(groupedInventory));
+            const brands = Object.keys(groupedInventory);
+            const models: string[] = [];
+            brands.forEach(b => {
+                Object.keys(groupedInventory[b]).forEach(m => models.push(`${b}-${m}`));
+            });
+            setExpandedBrands(brands);
+            setExpandedModels(models);
         }
     }, [searchTerm, groupedInventory]);
 
@@ -304,116 +320,123 @@ export const InventoryManager = () => {
                         </div>
                     )}
                     
-                    {Object.entries(groupedInventory).map(([brand, cars]) => (
-                        <div key={brand} className="space-y-3">
-                            <button 
-                                onClick={() => toggleBrand(brand)}
-                                className="flex items-center gap-3 w-full px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors group"
-                            >
-                                <span className="text-xl transition-transform duration-300" style={{ transform: expandedBrands.includes(brand) ? 'rotate(90deg)' : 'rotate(0deg)' }}>
-                                    📂
-                                </span>
-                                <span className="text-sm font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 group-hover:text-brand-red transition-colors">
-                                    {brand}
-                                </span>
-                                <span className="ml-auto bg-neutral-200 dark:bg-neutral-700 text-[10px] font-black px-2 py-0.5 rounded-full text-neutral-500">
-                                    {cars.length}
-                                </span>
-                            </button>
-
-                            {expandedBrands.includes(brand) && (
-                                <div className="space-y-4 ml-4 pl-4 border-l-2 border-neutral-100 dark:border-neutral-800 animate-in slide-in-from-left-2 duration-300">
-                                    {cars.map(car => {
-                                        const stats = calculateCarStats(car, transactions);
-                                        const isSelected = selectedCarId === car.id;
-                                        return (
-                                            <button 
-                                                key={car.id}
-                                                onClick={() => setSelectedCarId(car.id)}
-                                                className={`w-full text-left p-6 rounded-[2rem] border transition-all duration-500 group relative overflow-hidden ${
-                                                    isSelected 
-                                                    ? 'bg-neutral-900 dark:bg-white border-neutral-900 dark:border-white shadow-2xl shadow-red-500/20 -translate-y-1' 
-                                                    : 'bg-white/80 dark:bg-neutral-800/50 backdrop-blur-sm border-neutral-100 dark:border-neutral-700 hover:border-brand-red/50 hover:shadow-lg'
-                                                }`}
-                                            >
-                                {isSelected && (
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-red opacity-10 blur-3xl -mr-16 -mt-16 animate-pulse"></div>
-                                )}
-                                
-                                <div className="flex justify-between items-start gap-4 mb-6 relative z-10">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-3 mb-1">
-                                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap ${isSelected ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-400'}`}>
-                                                #{car.id.slice(0, 6)}
-                                            </span>
-                                            {car.licensePlate && (
-                                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter border whitespace-nowrap ${
-                                                    isSelected 
-                                                    ? 'bg-brand-red border-brand-red text-white' 
-                                                    : 'bg-neutral-100 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300'
-                                                }`}>
-                                                    {car.licensePlate}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <h3 className={`text-2xl font-black tracking-tight truncate ${isSelected ? 'text-white dark:text-neutral-900' : 'text-neutral-900 dark:text-white'}`}>
-                                            {car.name}
-                                        </h3>
-                                    </div>
-                                    <span className={`shrink-0 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm ${
-                                        car.status === 'sold' 
-                                        ? 'bg-emerald-500 text-white' 
-                                        : car.status === 'reserved'
-                                        ? 'bg-amber-500 text-white'
-                                        : 'bg-brand-blue text-white'
-                                    }`}>
-                                        {car.status}
+                    {Object.entries(groupedInventory).map(([brand, models]) => {
+                        const brandCount = Object.values(models).reduce((sum, units) => sum + units.length, 0);
+                        return (
+                            <div key={brand} className="space-y-3">
+                                <button 
+                                    onClick={() => toggleBrand(brand)}
+                                    className="flex items-center gap-3 w-full px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-2xl transition-colors group"
+                                >
+                                    <span className="text-xl transition-transform duration-300" style={{ transform: expandedBrands.includes(brand) ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+                                        📂
                                     </span>
-                                </div>
+                                    <span className="text-sm font-black uppercase tracking-[0.1em] text-gray-800 dark:text-gray-200 group-hover:text-brand-red transition-colors">
+                                        {brand}
+                                    </span>
+                                    <span className="ml-auto bg-neutral-200 dark:bg-neutral-700 text-[10px] font-black px-2 py-0.5 rounded-full text-neutral-500">
+                                        {brandCount}
+                                    </span>
+                                </button>
 
-                                <div className="grid grid-cols-2 gap-6 relative z-10">
-                                    <div className="space-y-1">
-                                        <p className={`text-[10px] font-black uppercase tracking-[0.15em] ${isSelected ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-400'}`}>Invested Value</p>
-                                        <p className={`text-xl font-black tabular-nums ${isSelected ? 'text-white dark:text-neutral-900' : 'text-neutral-900 dark:text-white'}`}>
-                                            {formatCurrency(stats.totalCosting)}
-                                        </p>
-                                    </div>
-                                    {car.status === 'sold' && (
-                                        <div className="space-y-1">
-                                            <p className={`text-[10px] font-black uppercase tracking-[0.15em] ${isSelected ? 'text-emerald-400' : 'text-neutral-400'}`}>Yield (Profit)</p>
-                                            <p className={`text-xl font-black tabular-nums ${isSelected ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-500'}`}>
-                                                +{formatCurrency(stats.netProfit)}
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
+                                {expandedBrands.includes(brand) && (
+                                    <div className="space-y-4 ml-4 pl-4 border-l-2 border-neutral-100 dark:border-neutral-800 animate-in slide-in-from-left-2 duration-300">
+                                        {Object.entries(models).map(([model, units]) => {
+                                            const modelKey = `${brand}-${model}`;
+                                            return (
+                                                <div key={model} className="space-y-2">
+                                                    <button 
+                                                        onClick={() => toggleModel(modelKey)}
+                                                        className="flex items-center gap-2 w-full px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors group"
+                                                    >
+                                                        <span className="text-sm grayscale opacity-50">{expandedModels.includes(modelKey) ? '📂' : '📁'}</span>
+                                                        <span className="text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 group-hover:text-brand-red">
+                                                            {model}
+                                                        </span>
+                                                        <span className="ml-auto text-[9px] font-black text-neutral-400 bg-neutral-50 dark:bg-neutral-900 px-2 py-0.5 rounded border dark:border-neutral-700">
+                                                            {units.length}
+                                                        </span>
+                                                    </button>
 
-                                {car.investorEmails && car.investorEmails.length > 0 && (
-                                    <div className={`mt-6 pt-6 border-t relative z-10 ${isSelected ? 'border-neutral-800 dark:border-neutral-100' : 'border-neutral-50 dark:border-neutral-700/50'}`}>
-                                        <div className="flex flex-wrap gap-2">
-                                            {car.investorEmails.map(email => (
-                                                <span 
-                                                    key={email}
-                                                    className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-colors ${
-                                                        isSelected 
-                                                        ? 'bg-neutral-800 dark:bg-neutral-50 border-neutral-700 dark:border-neutral-200 text-neutral-300 dark:text-neutral-600' 
-                                                        : 'bg-neutral-50 dark:bg-neutral-900/50 border-neutral-100 dark:border-neutral-700 text-neutral-500'
-                                                    }`}
-                                                    title={email}
-                                                >
-                                                    👤 {getNickname(email)}
-                                                </span>
-                                            ))}
-                                        </div>
+                                                    {expandedModels.includes(modelKey) && (
+                                                        <div className="space-y-3 ml-4 pl-4 border-l border-dashed border-neutral-200 dark:border-neutral-700 animate-in slide-in-from-top-1 duration-200">
+                                                            {units.map(car => {
+                                                                const stats = calculateCarStats(car, transactions);
+                                                                const isSelected = selectedCarId === car.id;
+                                                                return (
+                                                                    <button 
+                                                                        key={car.id}
+                                                                        onClick={() => setSelectedCarId(car.id)}
+                                                                        className={`w-full text-left p-6 rounded-[2rem] border transition-all duration-500 group relative overflow-hidden ${
+                                                                            isSelected 
+                                                                            ? 'bg-neutral-900 dark:bg-white border-neutral-900 dark:border-white shadow-2xl shadow-red-500/20 -translate-y-1' 
+                                                                            : 'bg-white/80 dark:bg-neutral-800/50 backdrop-blur-sm border-neutral-100 dark:border-neutral-700 hover:border-brand-red/50 hover:shadow-lg'
+                                                                        }`}
+                                                                    >
+                                                                        {isSelected && (
+                                                                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-red opacity-10 blur-3xl -mr-16 -mt-16 animate-pulse"></div>
+                                                                        )}
+                                                                        
+                                                                        <div className="flex justify-between items-start gap-4 mb-6 relative z-10">
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="flex items-center gap-3 mb-1">
+                                                                                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap ${isSelected ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-400'}`}>
+                                                                                        #{car.id.slice(0, 6)}
+                                                                                    </span>
+                                                                                    {car.licensePlate && (
+                                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter border whitespace-nowrap ${
+                                                                                            isSelected 
+                                                                                            ? 'bg-brand-red border-brand-red text-white' 
+                                                                                            : 'bg-neutral-100 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300'
+                                                                                        }`}>
+                                                                                            {car.licensePlate}
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                                <h3 className={`text-sm font-black uppercase tracking-tight truncate ${isSelected ? 'text-white dark:text-neutral-900' : 'text-neutral-900 dark:text-white'}`}>
+                                                                                    {car.licensePlate || car.name}
+                                                                                </h3>
+                                                                            </div>
+                                                                            <span className={`shrink-0 px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-sm ${
+                                                                                car.status === 'sold' 
+                                                                                ? 'bg-emerald-500 text-white' 
+                                                                                : car.status === 'reserved'
+                                                                                ? 'bg-amber-500 text-white'
+                                                                                : 'bg-brand-red text-white'
+                                                                            }`}>
+                                                                                {car.status}
+                                                                            </span>
+                                                                        </div>
+
+                                                                        <div className="grid grid-cols-2 gap-4 relative z-10">
+                                                                            <div className="space-y-1">
+                                                                                <p className={`text-[9px] font-black uppercase tracking-[0.1em] ${isSelected ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-400'}`}>Cost</p>
+                                                                                <p className={`text-sm font-black tabular-nums ${isSelected ? 'text-white dark:text-neutral-900' : 'text-neutral-900 dark:text-white'}`}>
+                                                                                    {formatCurrency(stats.totalCosting)}
+                                                                                </p>
+                                                                            </div>
+                                                                            {car.status === 'sold' && (
+                                                                                <div className="space-y-1">
+                                                                                    <p className={`text-[9px] font-black uppercase tracking-[0.1em] ${isSelected ? 'text-emerald-400' : 'text-neutral-400'}`}>Profit</p>
+                                                                                    <p className={`text-sm font-black tabular-nums ${isSelected ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-500'}`}>
+                                                                                        +{formatCurrency(stats.netProfit)}
+                                                                                    </p>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* Car Details / Transaction Sheet */}
