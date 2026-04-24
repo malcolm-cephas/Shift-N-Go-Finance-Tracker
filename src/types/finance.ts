@@ -93,7 +93,7 @@ export const TRANSACTION_CATEGORIES = {
     'Rent & Utilities',
     'Salaries & Commissions',
     'Taxes & Licenses',
-    'Fuel',
+    'Fuel & Tolls',
     'Other Expenses'
   ]
 } as const;

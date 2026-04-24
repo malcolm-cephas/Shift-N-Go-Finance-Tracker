@@ -472,9 +472,26 @@ export const BankStatementUpload: React.FC = () => {
       <div className="bg-white dark:bg-neutral-800 rounded-lg shadow-lg dark:shadow-neutral-900/50 p-6 space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-800 dark:text-neutral-100 mb-2">Bank Statement Import</h1>
-          <p className="text-gray-600 dark:text-neutral-400">
+          <p className="text-gray-600 dark:text-neutral-400 mb-4">
             Import daily balances from a CSV or calculate them from money in/out transactions.
           </p>
+          <button
+            onClick={() => {
+              const csvContent = "Date,Description,Amount,Balance\n01-04-2026,\"Opening Balance\",,150000.00\n02-04-2026,\"Fuel & Tolls\",-2500.00,147500.00\n05-04-2026,\"Sale Proceed - Innova Crysta\",1650000.00,1797500.00\n10-04-2026,\"Showroom Rent\",-45000.00,1752500.00\n15-04-2026,\"Investor Funding\",500000.00,2252500.00";
+              const blob = new Blob([csvContent], { type: 'text/csv' });
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.setAttribute('hidden', '');
+              a.setAttribute('href', url);
+              a.setAttribute('download', 'shift_n_go_template.csv');
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-200 rounded-lg text-xs font-black uppercase tracking-widest transition-all"
+          >
+            📥 Download CSV Template
+          </button>
         </div>
 
         <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 py-3 text-sm text-gray-600 dark:text-neutral-300">

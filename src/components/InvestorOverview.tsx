@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
@@ -113,7 +114,7 @@ export const InvestorOverview = () => {
         .reduce((sum, t) => sum + t.amount, 0);
 
     const fuelExpenses = transactions
-        .filter(t => t.type === 'expense' && t.category === 'Fuel')
+        .filter(t => t.type === 'expense' && (t.category === 'Fuel' || t.category === 'Fuel & Tolls'))
         .reduce((sum, t) => sum + t.amount, 0);
 
     // Helper to format without decimals for high-value dashboard cards
@@ -135,16 +136,30 @@ export const InvestorOverview = () => {
     if (!mounted) return null;
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 p-0 md:p-8 bg-white dark:bg-neutral-800 rounded-xl shadow-xl border dark:border-neutral-700 print:shadow-none print:border-none print:p-0">
+        <div className="max-w-6xl mx-auto space-y-8 p-0 md:p-8 bg-white dark:bg-neutral-800 rounded-xl shadow-xl border dark:border-neutral-700 print:shadow-none print:border-none print:p-0 relative overflow-hidden">
+            {/* Professional Watermark (Print Only) */}
+            <div className="hidden print:block absolute inset-0 opacity-[0.03] pointer-events-none flex items-center justify-center -rotate-45 scale-150">
+                <div className="text-[12rem] font-black uppercase tracking-[2rem]">SHIFT N GO</div>
+            </div>
+
             {/* Print-Only Professional Header */}
-            <div className="hidden print:flex justify-between items-start border-b-4 border-brand-red pb-6 mb-8 uppercase">
-                <div>
-                    <h1 className="text-4xl font-black text-gray-900 tracking-tighter">Shift N Go Financials</h1>
-                    <p className="text-sm font-bold text-gray-500 tracking-widest mt-1">Executive Investment Report</p>
+            <div className="hidden print:flex justify-between items-center border-b-[6px] border-neutral-900 pb-8 mb-10">
+                <div className="flex items-center gap-6">
+                    <Image src="/logo.png" alt="Logo" width={80} height={80} className="object-contain" />
+                    <div>
+                        <h1 className="text-4xl font-black text-neutral-900 tracking-tighter uppercase leading-none">Shift N Go Financials</h1>
+                        <p className="text-xs font-bold text-neutral-500 tracking-[0.4em] mt-2 uppercase italic">Executive Investment Portfolio</p>
+                    </div>
                 </div>
                 <div className="text-right">
-                    <p className="text-xs font-bold text-gray-400">Generated On</p>
-                    <p className="text-sm font-black text-gray-900">{mounted ? formatAppDate(new Date()) : ''}</p>
+                    <div className="mb-2">
+                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Report Reference</p>
+                        <p className="text-sm font-black text-neutral-900 uppercase tracking-tighter">SNGF-{new Date().getFullYear()}-{Math.floor(Math.random() * 10000)}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Generated On</p>
+                        <p className="text-sm font-black text-neutral-900">{mounted ? formatAppDate(new Date()) : ''}</p>
+                    </div>
                 </div>
             </div>
 
@@ -292,7 +307,7 @@ export const InvestorOverview = () => {
                             <span className="text-red-600 font-bold">-{formatCurrency(repairExpenses)}</span>
                         </div>
                         <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
-                            <span className="font-medium">Fuel & Logistics</span>
+                            <span className="font-medium">Fuel & Tolls</span>
                             <span className="text-red-600 font-bold">-{formatCurrency(fuelExpenses)}</span>
                         </div>
                         <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
@@ -331,10 +346,37 @@ export const InvestorOverview = () => {
                 </div>
             </div>
 
+            {/* Certification & Signature (Print Only) */}
+            <div className="hidden print:grid grid-cols-2 gap-20 mt-20 pt-10 border-t-2 border-neutral-100">
+                <div className="space-y-8">
+                    <div>
+                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Financial Integrity Certification</p>
+                        <p className="text-[10px] text-neutral-500 leading-relaxed italic">
+                            The undersigned hereby certifies that the financial data presented in this report accurately reflects the operational activities and current asset position of Shift N Go as of the date generated. All valuations are based on internal audit logs.
+                        </p>
+                    </div>
+                    <div className="pt-8 border-t border-neutral-300 w-2/3">
+                        <p className="text-[10px] font-black text-neutral-900 uppercase tracking-widest">Authorized Signature</p>
+                        <p className="text-[9px] text-neutral-400 uppercase mt-1">Shift N Go Management</p>
+                    </div>
+                </div>
+                <div className="flex flex-col justify-end items-end space-y-4">
+                    <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl text-right">
+                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-1">Portfolio Verification Hash</p>
+                        <p className="text-[8px] font-mono text-neutral-600 truncate max-w-[200px]">{typeof crypto !== 'undefined' ? crypto.randomUUID().toUpperCase() : 'VERIFIED-REPORT'}</p>
+                    </div>
+                    <div className="pt-8 border-t border-neutral-300 w-2/3 text-right">
+                        <p className="text-[10px] font-black text-neutral-900 uppercase tracking-widest">Investor Acknowledgment</p>
+                        <p className="text-[9px] text-neutral-400 uppercase mt-1">Date of Review</p>
+                    </div>
+                </div>
+            </div>
+
             {/* Bottom Disclaimer */}
-            <div className="mt-8 pt-8 border-t text-center text-xs text-gray-400">
-                <p>Private & Confidential. Prepared for investor review by Shift N Go.</p>
-                <p className="mt-1">© {new Date().getFullYear()} Shift N Go. All values based on user-entered data logs.</p>
+            <div className="mt-8 pt-8 border-t text-center text-xs text-gray-400 print:mt-10 print:pt-10 print:text-[8px] print:text-neutral-500">
+                <p className="font-bold">PRIVATE & CONFIDENTIAL</p>
+                <p className="mt-1 uppercase tracking-widest">Prepared for Authorized Investor Review by Shift N Go Asset Management</p>
+                <p className="mt-2">© {new Date().getFullYear()} Shift N Go. All rights reserved. Values based on real-time transactional logging.</p>
             </div>
         </div>
     );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -44,6 +45,11 @@ export const InventoryManager = () => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState('');
     const [purchaseAccountId, setPurchaseAccountId] = useState('');
+
+    // Bill Generator State
+    const [isGeneratingBill, setIsGeneratingBill] = useState(false);
+    const [customerName, setCustomerName] = useState('');
+    const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
 
     const handleAddCar = (e: React.FormEvent) => {
         e.preventDefault();
@@ -164,7 +170,7 @@ export const InventoryManager = () => {
 
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'reserved' | 'sold'>('available');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'reserved' | 'sold'>('all');
     const [expandedBrands, setExpandedBrands] = useState<string[]>([]);
     const [expandedModels, setExpandedModels] = useState<string[]>([]);
 
@@ -573,6 +579,16 @@ export const InventoryManager = () => {
                                             </button>
                                             <button 
                                                 onClick={() => {
+                                                    setCustomerName('');
+                                                    setInvoiceDate(new Date().toISOString().split('T')[0]);
+                                                    setIsGeneratingBill(true);
+                                                }}
+                                                className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors flex items-center gap-2"
+                                            >
+                                                📄 BILL
+                                            </button>
+                                            <button 
+                                                onClick={() => {
                                                     setSoldAccountId(accounts[0]?.id || '');
                                                     setIsMarkingSold(true);
                                                 }}
@@ -583,8 +599,20 @@ export const InventoryManager = () => {
                                         </>
                                     )}
                                     {selectedCar.status === 'sold' && (
-                                        <div className="bg-emerald-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">
-                                            COMPLETED VEHICLE
+                                        <div className="flex items-center gap-4">
+                                            <button 
+                                                onClick={() => {
+                                                    setCustomerName('');
+                                                    setInvoiceDate(new Date().toISOString().split('T')[0]);
+                                                    setIsGeneratingBill(true);
+                                                }}
+                                                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors flex items-center gap-2 border border-white/20"
+                                            >
+                                                📄 VIEW BILL
+                                            </button>
+                                            <div className="bg-emerald-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">
+                                                COMPLETED VEHICLE
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -670,7 +698,9 @@ export const InventoryManager = () => {
                         </div>
                     ) : (
                         <div className="h-[70vh] flex flex-col items-center justify-center bg-gray-50 dark:bg-neutral-900/20 rounded-[2.5rem] border-2 border-dashed dark:border-neutral-700">
-                            <div className="text-6xl mb-4 grayscale opacity-20">🚙</div>
+                            <div className="mb-6 grayscale opacity-20">
+                                <Image src="/logo.png" alt="Shift N Go" width={120} height={120} className="object-contain" />
+                            </div>
                             <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">Select a Vehicle to view Financial Logs</p>
                         </div>
                     )}
@@ -861,6 +891,189 @@ export const InventoryManager = () => {
                                     I CHANGED MY MIND (CANCEL)
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Bill Generator Modal */}
+            {isGeneratingBill && selectedCar && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md print:hidden">
+                    <div className="bg-white dark:bg-neutral-800 p-8 rounded-[3rem] shadow-2xl max-w-xl w-full border-4 border-neutral-900 dark:border-white animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-start mb-8">
+                            <div>
+                                <h3 className="text-3xl font-black uppercase tracking-tighter text-gray-900 dark:text-white">Generate Invoice</h3>
+                                <p className="text-gray-500 dark:text-neutral-400 text-sm font-bold mt-1 uppercase tracking-widest italic">Documenting the deal for {selectedCar.name}</p>
+                            </div>
+                            <button 
+                                onClick={() => setIsGeneratingBill(false)}
+                                className="w-10 h-10 rounded-full bg-gray-100 dark:bg-neutral-700 flex items-center justify-center text-xl hover:bg-red-500 hover:text-white transition-all"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Customer / Business Name</label>
+                                    <input 
+                                        type="text" 
+                                        value={customerName}
+                                        onChange={(e) => setCustomerName(e.target.value)}
+                                        placeholder="e.g. John Doe Enterprises"
+                                        className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border-2 border-neutral-100 dark:border-neutral-700 rounded-2xl outline-none font-bold focus:border-brand-red transition-all"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Invoice Date</label>
+                                    <input 
+                                        type="date" 
+                                        value={invoiceDate}
+                                        onChange={(e) => setInvoiceDate(e.target.value)}
+                                        className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border-2 border-neutral-100 dark:border-neutral-700 rounded-2xl outline-none font-bold focus:border-brand-red transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-brand-red/5 rounded-3xl border-2 border-dashed border-brand-red/20">
+                                <p className="text-[10px] font-black text-brand-red uppercase tracking-[0.3em] mb-4 text-center">Live Preview Summary</p>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="font-bold text-gray-500 uppercase tracking-tighter">Sale Price</span>
+                                        <span className="font-black text-gray-900 dark:text-white">{formatCurrency(selectedCar.salePrice || selectedCar.purchasePrice)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm border-t border-brand-red/10 pt-3">
+                                        <span className="font-bold text-gray-900 dark:text-white uppercase tracking-tighter">Final Invoice Total</span>
+                                        <span className="text-xl font-black text-brand-red">{formatCurrency(selectedCar.salePrice || selectedCar.purchasePrice)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                                <button 
+                                    onClick={() => {
+                                        const originalTitle = document.title;
+                                        document.title = `Invoice_${selectedCar.name.replace(/\s+/g, '_')}_${invoiceDate}`;
+                                        window.print();
+                                        document.title = originalTitle;
+                                    }}
+                                    className="w-full py-5 rounded-2xl font-black uppercase tracking-widest text-sm bg-neutral-900 dark:bg-white dark:text-neutral-900 text-white shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3"
+                                >
+                                    🖨️ PRINT BILL
+                                </button>
+                                <p className="text-[9px] text-center text-gray-400 font-bold uppercase tracking-widest">A4 Optimized Layout — Standard Dealership GST Ready</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* PRINTABLE BILL (Hidden in Web View) */}
+            {selectedCar && (
+                <div className="hidden print:block fixed inset-0 bg-white text-black p-12 font-sans z-[100]">
+                    {/* Header */}
+                    <div className="flex justify-between items-start border-b-[8px] border-black pb-10 mb-10">
+                        <div className="flex items-center gap-6">
+                            <Image src="/logo.png" alt="Logo" width={100} height={100} className="object-contain" />
+                            <div>
+                                <h1 className="text-5xl font-black tracking-tighter uppercase leading-none">Shift N Go</h1>
+                                <p className="text-[10px] font-bold tracking-[0.5em] mt-2 uppercase text-gray-500 italic">Premium Pre-owned Vehicle Hub</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <h2 className="text-2xl font-black uppercase tracking-widest mb-4">TAX INVOICE</h2>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Invoice Number</p>
+                            <p className="text-lg font-black uppercase tracking-tighter">SNG-{new Date(invoiceDate).getFullYear()}-{selectedCar.id.slice(0, 6).toUpperCase()}</p>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-4">Date</p>
+                            <p className="text-lg font-black">{formatAppDate(new Date(invoiceDate))}</p>
+                        </div>
+                    </div>
+
+                    {/* Parties Section */}
+                    <div className="grid grid-cols-2 gap-20 mb-16">
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Billed From</p>
+                            <div className="space-y-1">
+                                <p className="text-xl font-black uppercase tracking-tighter">Shift N Go Dealership</p>
+                                <p className="text-sm font-medium text-gray-600">Main Automotive Hub, Sector 12</p>
+                                <p className="text-sm font-medium text-gray-600">contact@shiftngo.com</p>
+                                <p className="text-sm font-black">+91 98765 43210</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Billed To</p>
+                            <div className="space-y-1">
+                                <p className="text-xl font-black uppercase tracking-tighter">{customerName || 'VALUED CUSTOMER'}</p>
+                                <p className="text-sm font-medium text-gray-500 italic">Purchase of Vehicle Portfolio Unit</p>
+                                <p className="text-sm font-bold text-black mt-2">GSTIN: Unregistered/Consumer</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Vehicle Table */}
+                    <div className="mb-16">
+                        <table className="w-full border-collapse">
+                            <thead>
+                                <tr className="bg-black text-white">
+                                    <th className="p-4 text-left font-black uppercase tracking-widest text-[10px]">Particulars</th>
+                                    <th className="p-4 text-left font-black uppercase tracking-widest text-[10px]">Reg No.</th>
+                                    <th className="p-4 text-right font-black uppercase tracking-widest text-[10px]">Agreement Price</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y-2 divide-black">
+                                <tr className="border-x-2 border-black">
+                                    <td className="p-6">
+                                        <p className="text-2xl font-black uppercase tracking-tighter">{selectedCar.name}</p>
+                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Vehicle Identification: {selectedCar.id}</p>
+                                    </td>
+                                    <td className="p-6 font-black text-xl tracking-tighter">{selectedCar.licensePlate || 'N/A'}</td>
+                                    <td className="p-6 text-right font-black text-2xl">{formatCurrency(selectedCar.salePrice || selectedCar.purchasePrice)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Calculation Section */}
+                    <div className="flex justify-end mb-20">
+                        <div className="w-1/2 space-y-4">
+                            <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest text-gray-500">
+                                <span>Vehicle Value</span>
+                                <span>{formatCurrency((selectedCar.salePrice || selectedCar.purchasePrice) / 1.18)}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest text-gray-500">
+                                <span>GST (18% Included)</span>
+                                <span>{formatCurrency((selectedCar.salePrice || selectedCar.purchasePrice) - (selectedCar.salePrice || selectedCar.purchasePrice) / 1.18)}</span>
+                            </div>
+                            <div className="flex justify-between items-center bg-black text-white p-6 rounded-2xl shadow-xl">
+                                <span className="text-xl font-black uppercase tracking-[0.2em]">Total Pay</span>
+                                <span className="text-3xl font-black">{formatCurrency(selectedCar.salePrice || selectedCar.purchasePrice)}</span>
+                            </div>
+                            <p className="text-[9px] text-right text-gray-400 font-bold uppercase italic mt-4">Amounts are inclusive of all statutory levies and taxes.</p>
+                        </div>
+                    </div>
+
+                    {/* Footer / Terms */}
+                    <div className="grid grid-cols-2 gap-20 items-end pt-20 border-t-2 border-black/10">
+                        <div className="space-y-6">
+                            <h5 className="text-[10px] font-black uppercase tracking-widest border-b border-black w-fit pb-1">Terms & Conditions</h5>
+                            <ol className="text-[9px] font-medium text-gray-500 space-y-2 list-decimal ml-4">
+                                <li>The vehicle is sold on an "as-is" basis at the time of delivery.</li>
+                                <li>This invoice serves as a formal receipt for the transfer of funds.</li>
+                                <li>Ownership transfer (RC) is the responsibility of the buyer unless agreed otherwise.</li>
+                                <li>No returns or refunds will be entertained after the vehicle leaves the premises.</li>
+                            </ol>
+                        </div>
+                        <div className="space-y-10 text-center">
+                            <div className="flex justify-center gap-10">
+                                <div className="w-48 pt-4 border-t-2 border-black/20">
+                                    <p className="text-[10px] font-black uppercase tracking-widest">Buyer Signature</p>
+                                </div>
+                                <div className="w-48 pt-4 border-t-2 border-black/20">
+                                    <p className="text-[10px] font-black uppercase tracking-widest">Shift N Go (Auth)</p>
+                                </div>
+                            </div>
+                            <p className="text-[8px] font-black text-gray-300 uppercase tracking-[0.5em]">This is a computer-generated tax invoice and requires no physical seal.</p>
                         </div>
                     </div>
                 </div>
