@@ -21,7 +21,7 @@ interface FinanceContextType {
   updateAccount: (accountId: string, updates: Pick<Account, 'name' | 'category' | 'type'>) => void;
   addTransaction: (transaction: Omit<Transaction, 'id' | 'date'> & { date?: Date }) => void;
   deleteTransaction: (transactionId: string) => void;
-  addInventoryItem: (item: Omit<InventoryItem, 'id' | 'createdAt'>) => void;
+  addInventoryItem: (item: Omit<InventoryItem, 'id' | 'createdAt'>) => InventoryItem;
   updateInventoryItem: (id: string, updates: Partial<InventoryItem>) => void;
   deleteInventoryItem: (id: string) => void;
   exportData: () => string;
@@ -296,6 +296,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (isCloudSyncAllowed()) {
       saveUserCloudData(accounts, balances, transactions, [...inventory, newItem]);
     }
+    return newItem;
   }
 
   const updateInventoryItem = (id: string, updates: Partial<InventoryItem>) => {

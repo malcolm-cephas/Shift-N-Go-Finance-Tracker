@@ -43,21 +43,41 @@ export const InventoryManager = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState('');
+    const [purchaseAccountId, setPurchaseAccountId] = useState('');
 
     const handleAddCar = (e: React.FormEvent) => {
         e.preventDefault();
-        addInventoryItem({
+        const price = parseFloat(purchasePrice);
+        
+        // 1. Add to Inventory
+        const newItem = addInventoryItem({
             name,
-            purchasePrice: parseFloat(purchasePrice),
+            purchasePrice: price,
             licensePlate: licensePlate || undefined,
             status: 'available',
             investorEmails: selectedInvestorEmails.length > 0 ? selectedInvestorEmails : undefined,
         });
+
+        // 2. Automatically Log Transaction (Expense)
+        if (purchaseAccountId && price > 0) {
+            addTransaction({
+                accountId: purchaseAccountId,
+                vehicleId: newItem.id,
+                investorEmails: newItem.investorEmails,
+                amount: price,
+                type: 'expense',
+                category: 'Vehicle Purchase',
+                description: `Acquisition of ${newItem.name} (${newItem.licensePlate || 'No Plate'})`,
+                date: new Date()
+            });
+        }
+
         setIsAdding(false);
         setName('');
         setPurchasePrice('');
         setLicensePlate('');
         setSelectedInvestorEmails([]);
+        setPurchaseAccountId('');
     };
 
     const getCarTransactions = (carId: string) => {
@@ -278,9 +298,23 @@ export const InventoryManager = () => {
                                 type="text" 
                                 value={licensePlate}
                                 onChange={(e) => setLicensePlate(e.target.value)}
-                                placeholder="e.g. MH 01 AB 1234"
-                                className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold uppercase"
+                                placeholder="MH 12 AB 1234"
+                                className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
                             />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Funding Account (Logs Expense)</label>
+                            <select 
+                                value={purchaseAccountId}
+                                onChange={(e) => setPurchaseAccountId(e.target.value)}
+                                className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold text-xs uppercase"
+                                required
+                            >
+                                <option value="">Select Account</option>
+                                {accounts.map(acc => (
+                                    <option key={acc.id} value={acc.id}>{acc.name} ({acc.category})</option>
+                                ))}
+                            </select>
                         </div>
                         <div className="md:col-span-3">
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investors</label>
