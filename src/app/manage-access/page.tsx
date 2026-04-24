@@ -252,36 +252,43 @@ export default function ManageAccessPage() {
             <div className="flex items-center gap-3 mb-6">
               <h2 className="text-sm font-bold text-gray-400 dark:text-neutral-500 uppercase tracking-[0.2em]">Manual Whitelist Grant</h2>
             </div>
-            <form onSubmit={handleAddUser} className="grid grid-cols-1 md:grid-cols-5 gap-4 bg-neutral-50 dark:bg-neutral-900/50 p-6 rounded-[2rem] border border-neutral-100 dark:border-neutral-800">
-              <input
-                type="email"
-                placeholder="Direct Email Address"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                required
-                className="md:col-span-1 px-6 py-4 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-medium"
-              />
-              <input
-                type="text"
-                placeholder="Enter Nickname"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="md:col-span-1 px-6 py-4 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-medium"
-              />
-              <select
-                value={newRole}
-                onChange={(e) => setNewRole(e.target.value as UserRole)}
-                className="px-6 py-4 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-black text-xs appearance-none"
-              >
-                <option value="ADMIN">ADMIN</option>
-                <option value="MANAGER">MANAGER</option>
-                <option value="INVESTOR">INVESTOR</option>
-              </select>
+            <form onSubmit={handleAddUser} className="grid grid-cols-1 md:grid-cols-7 gap-4 bg-neutral-50 dark:bg-neutral-900/50 p-6 rounded-[2rem] border border-neutral-100 dark:border-neutral-800">
+              <div className="md:col-span-2">
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  required
+                  className="w-full px-6 py-4 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-medium"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <input
+                  type="text"
+                  placeholder="Nickname"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  className="w-full px-6 py-4 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-medium"
+                />
+              </div>
+              <div className="md:col-span-2 relative">
+                <select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value as UserRole)}
+                  className="w-full px-6 py-4 bg-white dark:bg-neutral-800 border dark:border-neutral-700 rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-black text-xs appearance-none"
+                >
+                  <option value="ADMIN">ADMIN</option>
+                  <option value="MANAGER">MANAGER</option>
+                  <option value="INVESTOR">INVESTOR</option>
+                </select>
+                <div className="absolute inset-y-0 right-6 flex items-center pointer-events-none text-gray-400">▼</div>
+              </div>
               <button
                 type="submit"
-                className="md:col-span-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-black rounded-2xl py-4 shadow-xl transition-all active:scale-[0.98] uppercase tracking-widest text-xs"
+                className="md:col-span-1 bg-brand-red text-white font-black rounded-2xl py-4 shadow-xl shadow-red-500/20 transition-all active:scale-[0.98] uppercase tracking-widest text-[10px]"
               >
-                GRANT ACCESS
+                GRANT
               </button>
             </form>
           </section>

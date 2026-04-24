@@ -41,9 +41,9 @@ export const InvestorOverview = () => {
             .reduce((sum, t) => sum + t.amount, 0)
         : 0;
 
-    const inventoryValue = accounts
-        .filter(a => a.category === 'Inventory (Pre-owned Cars)')
-        .reduce((sum, acc) => sum + acc.currentBalance, 0);
+    const inventoryValue = inventory
+        .filter(i => i.status !== 'sold')
+        .reduce((sum, i) => sum + i.purchasePrice, 0);
 
     const totalAssets = accounts
         .filter(a => a.type === 'asset')
@@ -179,28 +179,28 @@ export const InvestorOverview = () => {
             )}
 
             {/* Main Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 print:grid-cols-4 print:gap-2 font-heading">
-                <div className="bg-brand-red/5 dark:bg-neutral-800 p-6 rounded-xl border border-brand-red/10 dark:border-neutral-700 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-brand-red uppercase tracking-widest mb-1">Total Inventory</p>
-                    <p className="text-2xl font-black text-gray-900 dark:text-white print:text-[14px] truncate">{formatCompact(inventoryValue)}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 print:grid-cols-5 print:gap-2 font-heading">
+                <div className="bg-brand-red/5 dark:bg-neutral-800 p-6 rounded-xl border border-brand-red/10 dark:border-neutral-700 min-w-0 print:bg-white print:border-neutral-200 print:p-3">
+                    <p className="text-[10px] font-black text-brand-red uppercase tracking-widest mb-1 truncate">Total Inventory</p>
+                    <p className="text-2xl font-black text-gray-900 dark:text-white print:text-[14px] truncate" title={formatCompact(inventoryValue)}>{formatCompact(inventoryValue)}</p>
                 </div>
-                <div className="bg-green-50 dark:bg-neutral-800 p-6 rounded-xl border border-green-100 dark:border-neutral-700 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Company Sales</p>
-                    <p className="text-2xl font-black text-green-900 dark:text-neutral-100 print:text-[14px] truncate">{formatCompact(totalSales)}</p>
+                <div className="bg-green-50 dark:bg-neutral-800 p-6 rounded-xl border border-green-100 dark:border-neutral-700 min-w-0 print:bg-white print:border-neutral-200 print:p-3">
+                    <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1 truncate">Company Sales</p>
+                    <p className="text-2xl font-black text-green-900 dark:text-neutral-100 print:text-[14px] truncate" title={formatCompact(totalSales)}>{formatCompact(totalSales)}</p>
                 </div>
-                <div className="bg-red-50 dark:bg-neutral-800 p-6 rounded-xl border border-red-100 dark:border-neutral-700 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">Total Expenses</p>
-                    <p className="text-2xl font-black text-red-900 dark:text-neutral-100 print:text-[14px] truncate">{formatCompact(totalExpenses)}</p>
+                <div className="bg-red-50 dark:bg-neutral-800 p-6 rounded-xl border border-red-100 dark:border-neutral-700 min-w-0 print:bg-white print:border-neutral-200 print:p-3">
+                    <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1 truncate">Total Expenses</p>
+                    <p className="text-2xl font-black text-red-900 dark:text-neutral-100 print:text-[14px] truncate" title={formatCompact(totalExpenses)}>{formatCompact(totalExpenses)}</p>
                 </div>
-                <div className="bg-purple-50 dark:bg-neutral-800 p-6 rounded-xl border border-purple-100 dark:border-neutral-700 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">Company Net (Cashflow)</p>
-                    <p className={`text-2xl font-black print:text-[14px] truncate ${netProfit >= 0 ? 'text-purple-900 dark:text-purple-100' : 'text-red-700'}`}>
+                <div className="bg-purple-50 dark:bg-neutral-800 p-6 rounded-xl border border-purple-100 dark:border-neutral-700 min-w-0 print:bg-white print:border-neutral-200 print:p-3">
+                    <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1 truncate">Company Net</p>
+                    <p className={`text-2xl font-black print:text-[14px] truncate ${netProfit >= 0 ? 'text-purple-900 dark:text-purple-100' : 'text-red-700'}`} title={formatCompact(netProfit)}>
                         {formatCompact(netProfit)}
                     </p>
                 </div>
-                <div className="bg-blue-50 dark:bg-neutral-800 p-6 rounded-xl border border-blue-100 dark:border-neutral-700 print:bg-white print:border-neutral-200 print:p-3">
-                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Realized Profit (Sold Units)</p>
-                    <p className={`text-2xl font-black print:text-[14px] truncate ${realizedProfit >= 0 ? 'text-blue-900 dark:text-blue-100' : 'text-red-700'}`}>
+                <div className="bg-blue-50 dark:bg-neutral-800 p-6 rounded-xl border border-blue-100 dark:border-neutral-700 min-w-0 print:bg-white print:border-neutral-200 print:p-3">
+                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 truncate">Realized Profit</p>
+                    <p className={`text-2xl font-black print:text-[14px] truncate ${realizedProfit >= 0 ? 'text-blue-900 dark:text-blue-100' : 'text-red-700'}`} title={formatCompact(realizedProfit)}>
                         {formatCompact(realizedProfit)}
                     </p>
                 </div>

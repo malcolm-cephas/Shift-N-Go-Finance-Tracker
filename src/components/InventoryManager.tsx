@@ -255,14 +255,14 @@ export const InventoryManager = () => {
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-brand-red opacity-10 blur-3xl -mr-16 -mt-16 animate-pulse"></div>
                                 )}
                                 
-                                <div className="flex justify-between items-start mb-6 relative z-10">
-                                    <div className="flex-1">
+                                <div className="flex justify-between items-start gap-4 mb-6 relative z-10">
+                                    <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3 mb-1">
-                                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isSelected ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-400'}`}>
+                                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap ${isSelected ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-400'}`}>
                                                 #{car.id.slice(0, 6)}
                                             </span>
                                             {car.licensePlate && (
-                                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter border ${
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter border whitespace-nowrap ${
                                                     isSelected 
                                                     ? 'bg-brand-red border-brand-red text-white' 
                                                     : 'bg-neutral-100 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300'
@@ -271,11 +271,11 @@ export const InventoryManager = () => {
                                                 </span>
                                             )}
                                         </div>
-                                        <h3 className={`text-2xl font-black tracking-tight ${isSelected ? 'text-white dark:text-neutral-900' : 'text-neutral-900 dark:text-white'}`}>
+                                        <h3 className={`text-2xl font-black tracking-tight truncate ${isSelected ? 'text-white dark:text-neutral-900' : 'text-neutral-900 dark:text-white'}`}>
                                             {car.name}
                                         </h3>
                                     </div>
-                                    <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm ${
+                                    <span className={`shrink-0 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm ${
                                         car.status === 'sold' 
                                         ? 'bg-emerald-500 text-white' 
                                         : car.status === 'reserved'

@@ -18,7 +18,7 @@ export const formatAppDate = (date: Date | string) => {
 export const calculateCarStats = (car: InventoryItem, transactions: Transaction[]) => {
     const carTx = transactions.filter(t => t.vehicleId === car.id);
     const otherExpenses = carTx
-        .filter(t => t.type === 'expense')
+        .filter(t => t.type === 'expense' && t.category !== 'Car Purchase (Inventory)')
         .reduce((sum, t) => sum + t.amount, 0);
     
     const totalCosting = car.purchasePrice + otherExpenses;

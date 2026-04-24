@@ -41,6 +41,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return new Intl.NumberFormat(selectedCurrency.locale, {
       style: 'currency',
       currency: selectedCurrency.code,
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
