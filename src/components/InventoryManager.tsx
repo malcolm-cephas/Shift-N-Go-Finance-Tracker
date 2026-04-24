@@ -971,109 +971,143 @@ export const InventoryManager = () => {
 
             {/* PRINTABLE BILL (Hidden in Web View) */}
             {selectedCar && (
-                <div className="hidden print:block fixed inset-0 bg-white text-black p-12 font-sans z-[100]">
+                <div className="hidden print:block bg-white text-black p-16 font-sans min-h-screen relative overflow-hidden">
+                    {/* Official Border / Watermark Detail */}
+                    <div className="absolute inset-4 border border-black/5 pointer-events-none" />
+                    
                     {/* Header */}
-                    <div className="flex justify-between items-start border-b-[8px] border-black pb-10 mb-10">
-                        <div className="flex items-center gap-6">
-                            <Image src="/logo.png" alt="Logo" width={100} height={100} className="object-contain" />
+                    <div className="flex justify-between items-start border-b-[6px] border-black pb-12 mb-12 relative z-10">
+                        <div className="flex items-center gap-8">
+                            <Image src="/logo.png" alt="Logo" width={110} height={110} className="object-contain" />
                             <div>
-                                <h1 className="text-5xl font-black tracking-tighter uppercase leading-none">Shift N Go</h1>
-                                <p className="text-[10px] font-bold tracking-[0.5em] mt-2 uppercase text-gray-500 italic">Premium Pre-owned Vehicle Hub</p>
+                                <h1 className="text-6xl font-black tracking-tighter uppercase leading-none">Shift N Go</h1>
+                                <p className="text-[11px] font-bold tracking-[0.4em] mt-3 uppercase text-gray-500 italic">Premium Pre-owned Vehicle Hub</p>
                             </div>
                         </div>
                         <div className="text-right">
-                            <h2 className="text-2xl font-black uppercase tracking-widest mb-4">TAX INVOICE</h2>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Invoice Number</p>
-                            <p className="text-lg font-black uppercase tracking-tighter">SNG-{new Date(invoiceDate).getFullYear()}-{selectedCar.id.slice(0, 6).toUpperCase()}</p>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-4">Date</p>
-                            <p className="text-lg font-black">{formatAppDate(new Date(invoiceDate))}</p>
+                            <h2 className="text-3xl font-black uppercase tracking-widest text-black mb-6">Tax Invoice</h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Document No.</p>
+                                    <p className="text-xl font-black tracking-tighter">SNG/{new Date(invoiceDate).getFullYear()}/{selectedCar.id.slice(0, 6).toUpperCase()}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Issue Date</p>
+                                    <p className="text-xl font-black tracking-tighter">{formatAppDate(new Date(invoiceDate))}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     {/* Parties Section */}
-                    <div className="grid grid-cols-2 gap-20 mb-16">
+                    <div className="grid grid-cols-2 gap-24 mb-20 relative z-10">
                         <div>
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Billed From</p>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 border-b border-gray-100 pb-2">Seller Details</p>
                             <div className="space-y-1">
-                                <p className="text-xl font-black uppercase tracking-tighter">Shift N Go Dealership</p>
-                                <p className="text-sm font-medium text-gray-600">Main Automotive Hub, Sector 12</p>
-                                <p className="text-sm font-medium text-gray-600">contact@shiftngo.com</p>
-                                <p className="text-sm font-black">+91 98765 43210</p>
+                                <p className="text-2xl font-black uppercase tracking-tighter">Shift N Go Dealership</p>
+                                <p className="text-base font-medium text-gray-600">Automotive Excellence Hub, Block 4</p>
+                                <p className="text-base font-medium text-gray-600">Corporate Sector 12, Hub City</p>
+                                <p className="text-base font-black mt-2">GSTIN: 27AABCS1234F1Z5 (Sample)</p>
+                                <p className="text-base font-black">+91 98765 43210</p>
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Billed To</p>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 border-b border-gray-100 pb-2 text-right">Buyer Details</p>
                             <div className="space-y-1">
-                                <p className="text-xl font-black uppercase tracking-tighter">{customerName || 'VALUED CUSTOMER'}</p>
-                                <p className="text-sm font-medium text-gray-500 italic">Purchase of Vehicle Portfolio Unit</p>
-                                <p className="text-sm font-bold text-black mt-2">GSTIN: Unregistered/Consumer</p>
+                                <p className="text-2xl font-black uppercase tracking-tighter">{customerName || 'Valued Client'}</p>
+                                <p className="text-base font-medium text-gray-500 italic">Transaction: Vehicle Acquisition</p>
+                                <p className="text-base font-bold text-black mt-4">Place of Supply: Registered Address</p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Vehicle Table */}
-                    <div className="mb-16">
-                        <table className="w-full border-collapse">
+                    {/* Vehicle Details Table */}
+                    <div className="mb-20 relative z-10">
+                        <table className="w-full">
                             <thead>
-                                <tr className="bg-black text-white">
-                                    <th className="p-4 text-left font-black uppercase tracking-widest text-[10px]">Particulars</th>
-                                    <th className="p-4 text-left font-black uppercase tracking-widest text-[10px]">Reg No.</th>
-                                    <th className="p-4 text-right font-black uppercase tracking-widest text-[10px]">Agreement Price</th>
+                                <tr className="border-y-2 border-black">
+                                    <th className="py-5 text-left font-black uppercase tracking-widest text-[11px]">Vehicle Description</th>
+                                    <th className="py-5 text-center font-black uppercase tracking-widest text-[11px]">Plate No.</th>
+                                    <th className="py-5 text-right font-black uppercase tracking-widest text-[11px]">Base Amount</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y-2 divide-black">
-                                <tr className="border-x-2 border-black">
-                                    <td className="p-6">
-                                        <p className="text-2xl font-black uppercase tracking-tighter">{selectedCar.name}</p>
-                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Vehicle Identification: {selectedCar.id}</p>
+                            <tbody className="border-b-2 border-black">
+                                <tr>
+                                    <td className="py-10">
+                                        <p className="text-3xl font-black uppercase tracking-tighter leading-tight">{selectedCar.name}</p>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-2">VIN/ID: {selectedCar.id.toUpperCase()}</p>
                                     </td>
-                                    <td className="p-6 font-black text-xl tracking-tighter">{selectedCar.licensePlate || 'N/A'}</td>
-                                    <td className="p-6 text-right font-black text-2xl">{formatCurrency(selectedCar.salePrice || selectedCar.purchasePrice)}</td>
+                                    <td className="py-10 text-center">
+                                        <span className="inline-block border-2 border-black px-4 py-2 text-2xl font-black tracking-tight uppercase">
+                                            {selectedCar.licensePlate || 'T/P'}
+                                        </span>
+                                    </td>
+                                    <td className="py-10 text-right font-black text-3xl tracking-tighter">
+                                        {formatCurrency(selectedCar.salePrice || selectedCar.purchasePrice)}
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
 
-                    {/* Calculation Section */}
-                    <div className="flex justify-end mb-20">
-                        <div className="w-1/2 space-y-4">
-                            <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest text-gray-500">
-                                <span>Vehicle Value</span>
+                    {/* Financial Summary */}
+                    <div className="flex justify-end mb-24 relative z-10">
+                        <div className="w-[45%] space-y-5">
+                            <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest text-gray-400">
+                                <span>Net Vehicle Value</span>
                                 <span>{formatCurrency((selectedCar.salePrice || selectedCar.purchasePrice) / 1.18)}</span>
                             </div>
-                            <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest text-gray-500">
-                                <span>GST (18% Included)</span>
+                            <div className="flex justify-between items-center text-sm font-bold uppercase tracking-widest text-gray-400">
+                                <span>GST (18% Inclusive)</span>
                                 <span>{formatCurrency((selectedCar.salePrice || selectedCar.purchasePrice) - (selectedCar.salePrice || selectedCar.purchasePrice) / 1.18)}</span>
                             </div>
-                            <div className="flex justify-between items-center bg-black text-white p-6 rounded-2xl shadow-xl">
-                                <span className="text-xl font-black uppercase tracking-[0.2em]">Total Pay</span>
-                                <span className="text-3xl font-black">{formatCurrency(selectedCar.salePrice || selectedCar.purchasePrice)}</span>
+                            <div className="pt-5 border-t-4 border-black">
+                                <div className="flex justify-between items-center bg-black text-white p-8 rounded-lg">
+                                    <div className="space-y-1">
+                                        <span className="block text-[11px] font-black uppercase tracking-[0.3em] opacity-60">Final Payable</span>
+                                        <span className="block text-xl font-black uppercase tracking-tighter">Agreement Total</span>
+                                    </div>
+                                    <span className="text-4xl font-black">{formatCurrency(selectedCar.salePrice || selectedCar.purchasePrice)}</span>
+                                </div>
                             </div>
-                            <p className="text-[9px] text-right text-gray-400 font-bold uppercase italic mt-4">Amounts are inclusive of all statutory levies and taxes.</p>
+                            <p className="text-[9px] text-right text-gray-400 font-bold uppercase italic mt-4 tracking-tight">
+                                Amount Chargeable (in words): Rupees {new Intl.NumberFormat('en-IN').format(selectedCar.salePrice || selectedCar.purchasePrice)} Only
+                            </p>
                         </div>
                     </div>
 
-                    {/* Footer / Terms */}
-                    <div className="grid grid-cols-2 gap-20 items-end pt-20 border-t-2 border-black/10">
-                        <div className="space-y-6">
-                            <h5 className="text-[10px] font-black uppercase tracking-widest border-b border-black w-fit pb-1">Terms & Conditions</h5>
-                            <ol className="text-[9px] font-medium text-gray-500 space-y-2 list-decimal ml-4">
-                                <li>The vehicle is sold on an "as-is" basis at the time of delivery.</li>
-                                <li>This invoice serves as a formal receipt for the transfer of funds.</li>
-                                <li>Ownership transfer (RC) is the responsibility of the buyer unless agreed otherwise.</li>
-                                <li>No returns or refunds will be entertained after the vehicle leaves the premises.</li>
-                            </ol>
-                        </div>
-                        <div className="space-y-10 text-center">
-                            <div className="flex justify-center gap-10">
-                                <div className="w-48 pt-4 border-t-2 border-black/20">
-                                    <p className="text-[10px] font-black uppercase tracking-widest">Buyer Signature</p>
+                    {/* Footer / Legal Section */}
+                    <div className="mt-auto relative z-10">
+                        <div className="grid grid-cols-2 gap-24 items-end border-t border-gray-100 pt-16">
+                            <div className="space-y-8">
+                                <h5 className="text-[11px] font-black uppercase tracking-widest border-b-2 border-black w-fit pb-1">Declarations & Terms</h5>
+                                <ol className="text-[10px] font-medium text-gray-500 space-y-3 list-decimal ml-5">
+                                    <li>Certified that the particulars given above are true and correct.</li>
+                                    <li>Vehicle sold under "Second-hand Goods" margin scheme where applicable.</li>
+                                    <li>The buyer has inspected the vehicle and is satisfied with its current condition.</li>
+                                    <li>Disputes, if any, shall be subject to local jurisdiction only.</li>
+                                </ol>
+                            </div>
+                            <div className="text-center space-y-16">
+                                <div className="flex justify-between gap-12">
+                                    <div className="flex-1 pt-4 border-t border-black/40">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Authenticated By</p>
+                                        <p className="text-sm font-black uppercase tracking-tighter">Shift N Go (Auth.)</p>
+                                    </div>
+                                    <div className="flex-1 pt-4 border-t border-black/40">
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Recipient Signature</p>
+                                        <p className="text-sm font-black uppercase tracking-tighter">Buyer/Customer</p>
+                                    </div>
                                 </div>
-                                <div className="w-48 pt-4 border-t-2 border-black/20">
-                                    <p className="text-[10px] font-black uppercase tracking-widest">Shift N Go (Auth)</p>
+                                <div className="pt-8 opacity-20 grayscale">
+                                    <Image src="/logo.png" alt="Logo" width={60} height={60} className="mx-auto object-contain" />
                                 </div>
                             </div>
-                            <p className="text-[8px] font-black text-gray-300 uppercase tracking-[0.5em]">This is a computer-generated tax invoice and requires no physical seal.</p>
+                        </div>
+                        <div className="mt-12 pt-8 border-t border-gray-100 text-center">
+                            <p className="text-[8px] font-black text-gray-300 uppercase tracking-[0.6em]">
+                                This is a Digitally Generated System Invoice | Shift N Go Automotive Portfolio Management
+                            </p>
                         </div>
                     </div>
                 </div>
