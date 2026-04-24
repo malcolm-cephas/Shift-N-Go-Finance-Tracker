@@ -11,7 +11,7 @@ import { ManageAccountModal } from './ManageAccountModal';
 import { ConfirmationModal } from './ui/ConfirmationModal';
 
 export const BalanceSheet = () => {
-  const { getAccountsWithBalances, deleteAccount, updateAccount, isLoading } = useFinance();
+  const { getAccountsWithBalances, deleteAccount, updateAccount, isLoading, inventory } = useFinance();
   const { formatCurrency } = useCurrency();
   const { role } = useAuth();
   const accountsWithBalances = getAccountsWithBalances();
@@ -25,8 +25,12 @@ export const BalanceSheet = () => {
     setEditingAccount(null);
   };
 
+  const inventoryValue = inventory
+    .filter(i => i.status !== 'sold')
+    .reduce((sum, i) => sum + i.purchasePrice, 0);
+
   const groupAccountsByType = (accounts: AccountWithBalance[]) => {
-    return accounts.reduce((groups, account) => {
+    const groups = accounts.reduce((groups, account) => {
       if (!groups[account.type]) {
         groups[account.type] = {};
       }
@@ -36,12 +40,31 @@ export const BalanceSheet = () => {
       groups[account.type][account.category].push(account);
       return groups;
     }, {} as Record<string, Record<string, AccountWithBalance[]>>);
+
+    // Inject Inventory as a virtual asset category
+    if (inventoryValue > 0) {
+      if (!groups['asset']) groups['asset'] = {};
+      groups['asset']['Vehicle Inventory (Stock)'] = [{
+        id: 'virtual-inventory',
+        name: 'Showroom Stock Value',
+        type: 'asset',
+        category: 'Vehicle Inventory (Stock)',
+        createdAt: new Date(),
+        currentBalance: inventoryValue
+      }];
+    }
+
+    return groups;
   };
 
   const calculateTotalByType = (accounts: AccountWithBalance[], type: string) => {
-    return accounts
+    const baseTotal = accounts
       .filter(account => account.type === type)
       .reduce((total, account) => total + account.currentBalance, 0);
+    
+    // Add inventory value to assets
+    if (type === 'asset') return baseTotal + inventoryValue;
+    return baseTotal;
   };
 
   const groupedAccounts = groupAccountsByType(accountsWithBalances);

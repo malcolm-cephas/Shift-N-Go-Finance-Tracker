@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
@@ -141,24 +141,71 @@ export const InventoryManager = () => {
     };
 
 
+    const [searchTerm, setSearchTerm] = useState('');
+    const [expandedBrands, setExpandedBrands] = useState<string[]>([]);
+
+    const getBrand = (name: string) => name.split(' ')[0] || 'Unknown';
+
+    const filteredInventory = useMemo(() => {
+        return displayInventory.filter(car => 
+            car.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            car.licensePlate?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [displayInventory, searchTerm]);
+
+    const groupedInventory = useMemo(() => {
+        const groups: Record<string, InventoryItem[]> = {};
+        filteredInventory.forEach(car => {
+            const brand = getBrand(car.name);
+            if (!groups[brand]) groups[brand] = [];
+            groups[brand].push(car);
+        });
+        return groups;
+    }, [filteredInventory]);
+
+    const toggleBrand = (brand: string) => {
+        setExpandedBrands(prev => 
+            prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
+        );
+    };
+
+    // Auto-expand folder if search is active
+    useEffect(() => {
+        if (searchTerm) {
+            setExpandedBrands(Object.keys(groupedInventory));
+        }
+    }, [searchTerm, groupedInventory]);
+
     const selectedCar = inventory.find(c => c.id === selectedCarId);
     const selectedCarStats = selectedCar ? calculateCarStats(selectedCar, transactions) : null;
 
     return (
-        <div className="max-w-6xl mx-auto space-y-8 p-6">
-            <div className="flex justify-between items-center">
+        <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">Vehicle Inventory</h1>
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Car-wise Profitability & Investor Tracking</p>
                 </div>
-                {isAdmin && (
-                    <button 
-                        onClick={() => setIsAdding(!isAdding)}
-                        className="bg-brand-red text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-red-200"
-                    >
-                        {isAdding ? 'CLOSE FORM' : 'ADD NEW VEHICLE'}
-                    </button>
-                )}
+                <div className="flex gap-4">
+                    <div className="relative group">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+                        <input 
+                            type="text"
+                            placeholder="Search fleet..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 pr-4 py-2 bg-white dark:bg-neutral-800 border rounded-xl text-xs font-bold focus:ring-2 focus:ring-brand-red outline-none min-w-[200px]"
+                        />
+                    </div>
+                    {isAdmin && (
+                        <button 
+                            onClick={() => setIsAdding(!isAdding)}
+                            className="bg-brand-red text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-red-200 whitespace-nowrap"
+                        >
+                            {isAdding ? 'CLOSE FORM' : 'ADD NEW VEHICLE'}
+                        </button>
+                    )}
+                </div>
             </div>
 
             {isAdding && (
@@ -232,25 +279,45 @@ export const InventoryManager = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Car List */}
-                <div className="lg:col-span-1 space-y-4 h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
-                    {displayInventory.length === 0 && (
+                <div className="lg:col-span-1 space-y-6 h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                    {Object.keys(groupedInventory).length === 0 && (
                         <div className="text-center py-20 bg-gray-50 dark:bg-neutral-900/50 rounded-[2.5rem] border border-dashed text-gray-400 font-bold">
                             {role === 'INVESTOR' ? 'No units tagged to your account.' : 'No units in inventory.'}
                         </div>
                     )}
-                    {displayInventory.map(car => {
-                        const stats = calculateCarStats(car, transactions);
-                        const isSelected = selectedCarId === car.id;
-                        return (
+                    
+                    {Object.entries(groupedInventory).map(([brand, cars]) => (
+                        <div key={brand} className="space-y-3">
                             <button 
-                                key={car.id}
-                                onClick={() => setSelectedCarId(car.id)}
-                                className={`w-full text-left p-6 rounded-[2.5rem] border transition-all duration-500 group relative overflow-hidden ${
-                                    isSelected 
-                                    ? 'bg-neutral-900 dark:bg-white border-neutral-900 dark:border-white shadow-2xl shadow-red-500/20 -translate-y-1' 
-                                    : 'bg-white/80 dark:bg-neutral-800/50 backdrop-blur-sm border-neutral-100 dark:border-neutral-700 hover:border-brand-red/50 hover:shadow-lg'
-                                }`}
+                                onClick={() => toggleBrand(brand)}
+                                className="flex items-center gap-3 w-full px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors group"
                             >
+                                <span className="text-xl transition-transform duration-300" style={{ transform: expandedBrands.includes(brand) ? 'rotate(90deg)' : 'rotate(0deg)' }}>
+                                    📂
+                                </span>
+                                <span className="text-sm font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 group-hover:text-brand-red transition-colors">
+                                    {brand}
+                                </span>
+                                <span className="ml-auto bg-neutral-200 dark:bg-neutral-700 text-[10px] font-black px-2 py-0.5 rounded-full text-neutral-500">
+                                    {cars.length}
+                                </span>
+                            </button>
+
+                            {expandedBrands.includes(brand) && (
+                                <div className="space-y-4 ml-4 pl-4 border-l-2 border-neutral-100 dark:border-neutral-800 animate-in slide-in-from-left-2 duration-300">
+                                    {cars.map(car => {
+                                        const stats = calculateCarStats(car, transactions);
+                                        const isSelected = selectedCarId === car.id;
+                                        return (
+                                            <button 
+                                                key={car.id}
+                                                onClick={() => setSelectedCarId(car.id)}
+                                                className={`w-full text-left p-6 rounded-[2rem] border transition-all duration-500 group relative overflow-hidden ${
+                                                    isSelected 
+                                                    ? 'bg-neutral-900 dark:bg-white border-neutral-900 dark:border-white shadow-2xl shadow-red-500/20 -translate-y-1' 
+                                                    : 'bg-white/80 dark:bg-neutral-800/50 backdrop-blur-sm border-neutral-100 dark:border-neutral-700 hover:border-brand-red/50 hover:shadow-lg'
+                                                }`}
+                                            >
                                 {isSelected && (
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-brand-red opacity-10 blur-3xl -mr-16 -mt-16 animate-pulse"></div>
                                 )}
@@ -322,9 +389,13 @@ export const InventoryManager = () => {
                                         </div>
                                     </div>
                                 )}
-                            </button>
-                        );
-                    })}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    ))}
                 </div>
 
                 {/* Car Details / Transaction Sheet */}

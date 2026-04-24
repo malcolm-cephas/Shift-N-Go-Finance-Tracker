@@ -6,10 +6,12 @@ import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { TRANSACTION_CATEGORIES } from '@/types/finance';
 import { formatAppDate } from '@/utils/financeUtils';
+import { useAuth } from '@/context/AuthContext';
 
 export default function TransactionsMasterPage() {
     const { transactions, accounts, inventory } = useFinance();
     const { formatCurrency } = useCurrency();
+    const { role, user } = useAuth();
 
     // -- Filter State --
     const [searchTerm, setSearchTerm] = useState('');
@@ -22,16 +24,32 @@ export default function TransactionsMasterPage() {
     // -- Pagination State --
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [currentPage, setCurrentPage] = useState(1);
-
+    
     // -- Derived Data (Filtering logic) --
     const filteredTransactions = useMemo(() => {
-        return transactions.filter(tx => {
+        const investorEmail = user?.email?.toLowerCase();
+        const isInvestor = role === 'INVESTOR';
+
+        // 1. Role-Based Privacy Filter
+        let visibleTransactions = transactions;
+        if (isInvestor && investorEmail) {
+            const carInvestorMap = new Map(inventory.map(c => [c.id, c.investorEmails?.map(e => e.toLowerCase()) || []]));
+            visibleTransactions = transactions.filter(tx => {
+                const isTaggedInTx = tx.investorEmails?.some(e => e.toLowerCase() === investorEmail);
+                const relatedCarInvestors = tx.vehicleId ? carInvestorMap.get(tx.vehicleId) : [];
+                const isTaggedInVehicle = relatedCarInvestors?.includes(investorEmail);
+                return isTaggedInTx || isTaggedInVehicle;
+            });
+        }
+
+        // 2. Functional Filters
+        return visibleTransactions.filter(tx => {
             const searchStr = searchTerm.toLowerCase();
             const accountName = accounts.find(a => a.id === tx.accountId)?.name || '';
             const txDate = new Date(tx.date);
             const txDateStr = formatAppDate(txDate);
 
-            // 1. Text Search
+            // Text Search
             const matchesSearch = 
                 tx.description?.toLowerCase().includes(searchStr) ||
                 tx.category?.toLowerCase().includes(searchStr) ||
@@ -39,16 +57,16 @@ export default function TransactionsMasterPage() {
                 txDateStr.includes(searchStr) ||
                 tx.amount.toString().includes(searchStr);
 
-            // 2. Type Filter
+            // Type Filter
             const matchesType = typeFilter === 'all' || tx.type === typeFilter;
 
-            // 3. Category Filter
+            // Category Filter
             const matchesCategory = categoryFilter === 'all' || tx.category === categoryFilter;
 
-            // 4. Vehicle Filter
+            // Vehicle Filter
             const matchesVehicle = vehicleFilter === 'all' || tx.vehicleId === vehicleFilter;
 
-            // 5. Date Filter
+            // Date Filter
             let matchesDate = true;
             if (startDate) {
                 const sDate = new Date(startDate);
@@ -63,7 +81,14 @@ export default function TransactionsMasterPage() {
 
             return matchesSearch && matchesType && matchesCategory && matchesVehicle && matchesDate;
         });
-    }, [transactions, searchTerm, typeFilter, categoryFilter, vehicleFilter, startDate, endDate, accounts]);
+    }, [transactions, searchTerm, typeFilter, categoryFilter, vehicleFilter, startDate, endDate, accounts, role, user, inventory]);
+
+    // Restricted inventory for the dropdown
+    const visibleInventory = useMemo(() => {
+        if (role !== 'INVESTOR' || !user?.email) return inventory;
+        const email = user.email.toLowerCase();
+        return inventory.filter(car => car.investorEmails?.some(e => e.toLowerCase() === email));
+    }, [inventory, role, user]);
 
     // -- Sorting (Most recent first) --
     const sortedTransactions = useMemo(() => {
@@ -190,7 +215,7 @@ export default function TransactionsMasterPage() {
                                 className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-900/50 border dark:border-neutral-700 rounded-2xl text-xs font-black uppercase outline-none focus:ring-2 focus:ring-brand-red transition-all"
                             >
                                 <option value="all">ALL VEHICLES</option>
-                                {inventory.map(car => (
+                                {visibleInventory.map(car => (
                                     <option key={car.id} value={car.id}>
                                         {car.name} {car.licensePlate ? `(${car.licensePlate})` : ''}
                                     </option>
