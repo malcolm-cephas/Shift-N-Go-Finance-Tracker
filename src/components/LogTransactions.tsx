@@ -6,7 +6,6 @@ import { TRANSACTION_CATEGORIES } from '@/types/finance';
 import { formatAppDate } from '@/utils/financeUtils';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
-import { useAuth } from '@/context/AuthContext';
 
 export const LogTransactions = () => {
     const { accounts, transactions, addTransaction, deleteTransaction, inventory, investorEmails, getNickname } = useFinance();

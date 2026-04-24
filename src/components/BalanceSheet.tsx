@@ -5,7 +5,6 @@ import { useFinance } from '@/context/FinanceContext';
 import { Account, AccountWithBalance } from '@/types/finance';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
-import { useAuth } from '@/context/AuthContext';
 import WelcomeScreen from './WelcomeScreen';
 import { ManageAccountModal } from './ManageAccountModal';
 import { ConfirmationModal } from './ui/ConfirmationModal';

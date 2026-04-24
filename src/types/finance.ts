@@ -48,6 +48,7 @@ export interface AccountWithHistory extends Account {
   balanceHistory: { date: Date; amount: number }[];
 }
 
+export interface ACCOUNT_CATEGORIES_TYPE {
   asset: string[];
   liability: string[];
   equity: string[];
