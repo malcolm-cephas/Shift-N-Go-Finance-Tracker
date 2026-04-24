@@ -23,6 +23,26 @@ export const LogTransactions = () => {
     const [description, setDescription] = useState<string>('');
     const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
+    // Custom Vehicle Picker State
+    const [isPickerOpen, setIsPickerOpen] = useState(false);
+    const [pickerLevel, setPickerLevel] = useState<'brand' | 'model' | 'unit'>('brand');
+    const [tempBrand, setTempBrand] = useState<string | null>(null);
+    const [tempModel, setTempModel] = useState<string | null>(null);
+
+    const vehicleHierarchy = useMemo(() => {
+        const hierarchy: Record<string, Record<string, typeof inventory>> = {};
+        inventory.forEach(car => {
+            const parts = car.name.split(' ');
+            const brand = parts[0] || 'Other';
+            const model = parts.slice(1).join(' ') || 'Standard';
+            
+            if (!hierarchy[brand]) hierarchy[brand] = {};
+            if (!hierarchy[brand][model]) hierarchy[brand][model] = [];
+            hierarchy[brand][model].push(car);
+        });
+        return hierarchy;
+    }, [inventory]);
+
     // View State
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
@@ -234,26 +254,144 @@ export const LogTransactions = () => {
                             </div>
 
                             <div>
-                                <label htmlFor="vehicle" className="block text-xs font-bold text-gray-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
-                                    Link to Vehicle (Inventory)
+                                <label className="block text-xs font-black text-gray-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
+                                    Link to Vehicle
                                 </label>
-                                <select
-                                    id="vehicle"
-                                    value={vehicleId}
-                                    onChange={(e) => setVehicleId(e.target.value)}
-                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-700 dark:border-neutral-600 font-bold text-brand-red appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em]"
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsPickerOpen(true);
+                                        setPickerLevel('brand');
+                                    }}
+                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-700 dark:border-neutral-600 font-bold text-brand-red text-left flex justify-between items-center"
                                 >
-                                    <option value="">-- General Expense --</option>
-                                    {Object.entries(groupedInventory).map(([brand, cars]) => (
-                                        <optgroup key={brand} label={brand.toUpperCase()}>
-                                            {cars.map(item => (
-                                                <option key={item.id} value={item.id}>
-                                                    {item.name} {item.licensePlate ? `(${item.licensePlate})` : ''}
-                                                </option>
-                                            ))}
-                                        </optgroup>
-                                    ))}
-                                </select>
+                                    <span className="truncate">
+                                        {vehicleId ? (inventory.find(i => i.id === vehicleId)?.name || 'Linked Unit') : '-- General Expense --'}
+                                    </span>
+                                    <span>▼</span>
+                                </button>
+
+                                {isPickerOpen && (
+                                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                                        <div className="bg-white dark:bg-neutral-800 rounded-[2rem] shadow-2xl w-full max-w-md border-2 border-brand-red overflow-hidden flex flex-col max-h-[80vh]">
+                                            <div className="p-6 bg-neutral-900 text-white flex justify-between items-center">
+                                                <div>
+                                                    <h3 className="text-xl font-black uppercase tracking-tighter">Select Vehicle</h3>
+                                                    <div className="flex gap-2 text-[9px] font-black uppercase tracking-widest text-neutral-400 mt-1">
+                                                        <span className={pickerLevel === 'brand' ? 'text-brand-red' : ''}>Brand</span>
+                                                        <span>/</span>
+                                                        <span className={pickerLevel === 'model' ? 'text-brand-red' : ''}>Model</span>
+                                                        <span>/</span>
+                                                        <span className={pickerLevel === 'unit' ? 'text-brand-red' : ''}>Unit</span>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setIsPickerOpen(false)}
+                                                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+
+                                            <div className="p-4 bg-neutral-50 dark:bg-neutral-900 border-b dark:border-neutral-700 flex gap-2 overflow-x-auto whitespace-nowrap custom-scrollbar">
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => { setPickerLevel('brand'); setTempBrand(null); setTempModel(null); }}
+                                                    className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${pickerLevel === 'brand' ? 'bg-brand-red text-white border-brand-red' : 'bg-white dark:bg-neutral-800 text-neutral-400 border-neutral-200 dark:border-neutral-700'}`}
+                                                >
+                                                    Start
+                                                </button>
+                                                {tempBrand && (
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => { setPickerLevel('model'); setTempModel(null); }}
+                                                        className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${pickerLevel === 'model' ? 'bg-brand-red text-white border-brand-red' : 'bg-white dark:bg-neutral-800 text-neutral-400 border-neutral-200 dark:border-neutral-700'}`}
+                                                    >
+                                                        {tempBrand}
+                                                    </button>
+                                                )}
+                                                {tempModel && (
+                                                    <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-brand-red text-white border border-brand-red">
+                                                        {tempModel}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                                                {pickerLevel === 'brand' && (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { setVehicleId(''); setIsPickerOpen(false); }}
+                                                            className="w-full flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-900/50 border-2 border-dashed border-neutral-200 dark:border-neutral-700 rounded-2xl hover:border-brand-red hover:bg-white dark:hover:bg-neutral-800 group transition-all mb-4"
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-xl">🏢</span>
+                                                                <span className="font-black uppercase tracking-widest text-xs text-neutral-500 group-hover:text-brand-red">-- General Business Expense --</span>
+                                                            </div>
+                                                            <span className="text-neutral-300 group-hover:text-brand-red">✓</span>
+                                                        </button>
+                                                        <div className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-3 ml-2">Select Vehicle Brand</div>
+                                                        {Object.keys(vehicleHierarchy).sort().map(brand => (
+                                                            <button
+                                                                key={brand}
+                                                                type="button"
+                                                                onClick={() => { setTempBrand(brand); setPickerLevel('model'); }}
+                                                                className="w-full flex items-center justify-between p-4 bg-white dark:bg-neutral-900 border dark:border-neutral-700 rounded-2xl hover:border-brand-red group transition-all"
+                                                            >
+                                                                <span className="font-black uppercase tracking-widest text-sm text-gray-700 dark:text-neutral-300 group-hover:text-brand-red">{brand}</span>
+                                                                <span className="text-neutral-300 group-hover:text-brand-red">→</span>
+                                                            </button>
+                                                        ))}
+                                                    </>
+                                                )}
+
+                                                {pickerLevel === 'model' && tempBrand && (
+                                                    Object.keys(vehicleHierarchy[tempBrand]).sort().map(model => (
+                                                        <button
+                                                            key={model}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const units = vehicleHierarchy[tempBrand][model];
+                                                                if (units.length === 1) {
+                                                                    setVehicleId(units[0].id);
+                                                                    setIsPickerOpen(false);
+                                                                } else {
+                                                                    setTempModel(model);
+                                                                    setPickerLevel('unit');
+                                                                }
+                                                            }}
+                                                            className="w-full flex items-center justify-between p-4 bg-white dark:bg-neutral-900 border dark:border-neutral-700 rounded-2xl hover:border-brand-red group transition-all"
+                                                        >
+                                                            <span className="font-black uppercase tracking-widest text-sm text-gray-700 dark:text-neutral-300 group-hover:text-brand-red">{model}</span>
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded text-[10px] font-black text-neutral-500">{vehicleHierarchy[tempBrand][model].length} UNITS</span>
+                                                                <span className="text-neutral-300 group-hover:text-brand-red">→</span>
+                                                            </div>
+                                                        </button>
+                                                    ))
+                                                )}
+
+                                                {pickerLevel === 'unit' && tempBrand && tempModel && (
+                                                    vehicleHierarchy[tempBrand][tempModel].map(unit => (
+                                                        <button
+                                                            key={unit.id}
+                                                            type="button"
+                                                            onClick={() => { setVehicleId(unit.id); setIsPickerOpen(false); }}
+                                                            className="w-full flex flex-col p-4 bg-white dark:bg-neutral-900 border dark:border-neutral-700 rounded-2xl hover:border-brand-red group transition-all"
+                                                        >
+                                                            <span className="font-black uppercase tracking-tighter text-lg text-gray-800 dark:text-neutral-200 group-hover:text-brand-red">
+                                                                {unit.licensePlate || 'NO PLATE'}
+                                                            </span>
+                                                            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">ID: {unit.id.slice(0, 8)}</span>
+                                                        </button>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Investor Multi-Select Dropdown */}
