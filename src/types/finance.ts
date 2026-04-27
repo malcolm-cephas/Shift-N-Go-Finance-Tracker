@@ -86,6 +86,7 @@ export const ACCOUNT_CATEGORIES: ACCOUNT_CATEGORIES_TYPE = {
 export const TRANSACTION_CATEGORIES = {
   income: [
     'Car Sale',
+    'Reservation',
     'Investor Funding',
     'Financing Commission',
     'Service/Repair Revenue',

@@ -55,6 +55,11 @@ export const InventoryManager = () => {
     const [customerName, setCustomerName] = useState('');
     const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
 
+    // Reservation State
+    const [isReserving, setIsReserving] = useState(false);
+    const [advanceAmount, setAdvanceAmount] = useState('0');
+    const [advanceAccountId, setAdvanceAccountId] = useState('');
+
     const handleAddCar = (e: React.FormEvent) => {
         e.preventDefault();
         const price = parseFloat(purchasePrice);
@@ -145,6 +150,36 @@ export const InventoryManager = () => {
         setSoldPrice('');
         setSoldComm('0');
         setSoldAccountId('');
+    };
+
+    const handleReserveSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedCarId || !advanceAccountId) return;
+        const car = inventory.find(c => c.id === selectedCarId);
+        if (!car) return;
+
+        const advance = parseFloat(advanceAmount);
+
+        // 1. Update Inventory Status
+        updateInventoryItem(car.id, { status: 'reserved' });
+
+        // 2. Automatically Log Transaction (Income - Reservation) if advance > 0
+        if (advance > 0) {
+            addTransaction({
+                accountId: advanceAccountId,
+                vehicleId: car.id,
+                investorEmails: car.investorEmails,
+                amount: advance,
+                type: 'income',
+                category: 'Reservation',
+                description: `Advance Payment for Reservation: ${car.name}`,
+                date: new Date()
+            });
+        }
+
+        setIsReserving(false);
+        setAdvanceAmount('0');
+        setAdvanceAccountId('');
     };
 
     const handleEditCarSubmit = (e: React.FormEvent) => {
@@ -589,7 +624,10 @@ export const InventoryManager = () => {
                                     {selectedCar.status === 'available' && isAdmin && (
                                         <>
                                             <button 
-                                                onClick={() => updateInventoryItem(selectedCar.id, { status: 'reserved' })}
+                                                onClick={() => {
+                                                    setAdvanceAccountId(accounts[0]?.id || '');
+                                                    setIsReserving(true);
+                                                }}
                                                 className="bg-amber-500 hover:bg-amber-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors"
                                             >
                                                 RESERVE
@@ -1027,6 +1065,59 @@ export const InventoryManager = () => {
                                 <p className="text-[9px] text-center text-gray-400 font-bold uppercase tracking-widest">A4 Optimized Layout — Standard Dealership GST Ready</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reserve Vehicle Modal */}
+            {isReserving && selectedCar && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-neutral-800 p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border-2 border-amber-500">
+                        <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">Reserve Vehicle</h3>
+                        <p className="text-gray-500 text-sm mb-6 font-bold">Locking the unit for <span className="text-amber-500">{selectedCar.name}</span></p>
+                        
+                        <form onSubmit={handleReserveSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Advance Amount Received</label>
+                                <input 
+                                    type="number" 
+                                    value={advanceAmount}
+                                    onChange={(e) => setAdvanceAmount(e.target.value)}
+                                    placeholder="e.g. 10000"
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-900 border rounded-xl outline-none font-bold focus:ring-2 focus:ring-amber-500"
+                                    required 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Account Receiving Payment</label>
+                                <select 
+                                    value={advanceAccountId}
+                                    onChange={(e) => setAdvanceAccountId(e.target.value)}
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-900 border rounded-xl outline-none font-bold focus:ring-2 focus:ring-amber-500 text-xs"
+                                    required
+                                >
+                                    <option value="">Select Account</option>
+                                    {accounts.map(acc => (
+                                        <option key={acc.id} value={acc.id}>{acc.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="pt-4 flex gap-4">
+                                <button 
+                                    type="button"
+                                    onClick={() => setIsReserving(false)}
+                                    className="flex-1 py-4 rounded-xl font-black uppercase tracking-widest text-xs bg-gray-100 text-gray-500"
+                                >
+                                    CANCEL
+                                </button>
+                                <button 
+                                    type="submit"
+                                    className="flex-[2] py-4 rounded-xl font-black uppercase tracking-widest text-xs bg-amber-500 text-white shadow-lg shadow-amber-500/20"
+                                >
+                                    CONFIRM RESERVATION
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
