@@ -1,5 +1,10 @@
 export type AccountType = 'asset' | 'liability' | 'equity';
 
+export interface InvestorShare {
+  email: string;
+  share: number; // Percentage, e.g. 25 for 25%
+}
+
 export interface Account {
   id: string;
   name: string;
@@ -23,7 +28,8 @@ export interface InventoryItem {
   sellingBrokerCommission?: number;
   status: 'available' | 'sold' | 'reserved';
   licensePlate?: string; // Optional: Registration number
-  investorEmails?: string[]; // Tagged investors who funded this car
+  investorEmails?: string[]; // Deprecated: Tagged investors who funded this car
+  investors?: InvestorShare[]; // New: Investors with their specific shares
   createdAt: Date;
   soldAt?: Date;
 }

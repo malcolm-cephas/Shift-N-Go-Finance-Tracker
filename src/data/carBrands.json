@@ -1,0 +1,50 @@
+{
+  "car_brands_india_preowned": {
+    "active_brands": [
+      "Suzuki",
+      "Hyundai",
+      "Tata Motors",
+      "Mahindra",
+      "Toyota",
+      "Kia",
+      "Honda",
+      "Skoda",
+      "Volkswagen",
+      "Renault",
+      "Nissan",
+      "MG Motor",
+      "Jeep",
+      "Citroen",
+      "BYD",
+      "Isuzu",
+      "Audi",
+      "BMW",
+      "Mercedes-Benz",
+      "Volvo",
+      "Jaguar",
+      "Land Rover",
+      "Lexus",
+      "Mini",
+      "Porsche",
+      "Rolls-Royce",
+      "Ferrari",
+      "Lamborghini",
+      "Bentley",
+      "Maserati",
+      "McLaren",
+      "Aston Martin"
+    ],
+    "discontinued_or_exited_brands": [
+      "Chevrolet",
+      "Ford",
+      "Fiat",
+      "Mitsubishi",
+      "Daewoo",
+      "Opel",
+      "Hindustan Motors",
+      "Premier",
+      "Datsun",
+      "SsangYong"
+    ]
+  }
+}

@@ -7,7 +7,7 @@ import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
 import { InventoryItem } from '@/types/finance';
-import { calculateCarStats, formatAppDate } from '@/utils/financeUtils';
+import { calculateCarStats, formatAppDate, parseCarName } from '@/utils/financeUtils';
 
 export const InventoryManager = () => {
     const router = useRouter();
@@ -20,7 +20,10 @@ export const InventoryManager = () => {
     // FILTER: If investor, only show their cars
     const displayInventory = useMemo(() => {
         if (role === 'INVESTOR' && investorEmailIdentity) {
-            return inventory.filter(item => item.investorEmails?.some(e => e.toLowerCase() === investorEmailIdentity));
+            return inventory.filter(item => 
+                item.investorEmails?.some(e => e.toLowerCase() === investorEmailIdentity) ||
+                item.investors?.some(inv => inv.email.toLowerCase() === investorEmailIdentity)
+            );
         }
         return inventory;
     }, [inventory, role, investorEmailIdentity]);
@@ -33,6 +36,7 @@ export const InventoryManager = () => {
     const [purchasePrice, setPurchasePrice] = useState('');
     const [licensePlate, setLicensePlate] = useState('');
     const [selectedInvestorEmails, setSelectedInvestorEmails] = useState<string[]>([]);
+    const [investorShares, setInvestorShares] = useState<Record<string, string>>({});
     
     // Mark as Sold Modal State
     const [isMarkingSold, setIsMarkingSold] = useState(false);
@@ -62,6 +66,10 @@ export const InventoryManager = () => {
             licensePlate: licensePlate || undefined,
             status: 'available',
             investorEmails: selectedInvestorEmails.length > 0 ? selectedInvestorEmails : undefined,
+            investors: selectedInvestorEmails.length > 0 ? selectedInvestorEmails.map(email => ({
+                email,
+                share: parseFloat(investorShares[email] || (100 / selectedInvestorEmails.length).toString())
+            })) : undefined,
         });
 
         // 2. Automatically Log Transaction (Expense)
@@ -147,6 +155,10 @@ export const InventoryManager = () => {
             purchasePrice: parseFloat(purchasePrice),
             licensePlate: licensePlate || undefined,
             investorEmails: selectedInvestorEmails.length > 0 ? selectedInvestorEmails : undefined,
+            investors: selectedInvestorEmails.length > 0 ? selectedInvestorEmails.map(email => ({
+                email,
+                share: parseFloat(investorShares[email] || (100 / selectedInvestorEmails.length).toString())
+            })) : undefined,
         });
         setIsEditing(false);
     };
@@ -164,7 +176,12 @@ export const InventoryManager = () => {
         setName(selectedCar.name);
         setPurchasePrice(selectedCar.purchasePrice.toString());
         setLicensePlate(selectedCar.licensePlate || '');
-        setSelectedInvestorEmails(selectedCar.investorEmails || []);
+        setSelectedInvestorEmails(selectedCar.investorEmails || selectedCar.investors?.map(i => i.email) || []);
+        const shares: Record<string, string> = {};
+        selectedCar.investors?.forEach(inv => {
+            shares[inv.email] = inv.share.toString();
+        });
+        setInvestorShares(shares);
         setIsEditing(true);
     };
 
@@ -174,8 +191,8 @@ export const InventoryManager = () => {
     const [expandedBrands, setExpandedBrands] = useState<string[]>([]);
     const [expandedModels, setExpandedModels] = useState<string[]>([]);
 
-    const getBrand = (name: string) => name.split(' ')[0] || 'Unknown';
-    const getModel = (name: string) => name.split(' ').slice(1).join(' ') || 'Standard';
+    const getBrand = (name: string) => parseCarName(name).brand;
+    const getModel = (name: string) => parseCarName(name).model;
 
     const filteredInventory = useMemo(() => {
         return displayInventory.filter(car => {
@@ -324,29 +341,46 @@ export const InventoryManager = () => {
                             </select>
                         </div>
                         <div className="md:col-span-3">
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investors</label>
-                            <div className="flex flex-wrap gap-4 p-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl">
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investors & Define Shares (%)</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {investorEmails.map(email => (
-                                    <label key={email} className="flex items-center gap-2 cursor-pointer group">
-                                        <input 
-                                            type="checkbox"
-                                            checked={selectedInvestorEmails.includes(email)}
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setSelectedInvestorEmails(prev => [...prev, email]);
-                                                } else {
-                                                    setSelectedInvestorEmails(prev => prev.filter(e => e !== email));
-                                                }
-                                            }}
-                                            className="w-5 h-5 rounded border-neutral-300 text-brand-red focus:ring-brand-red cursor-pointer"
-                                        />
-                                        <span className="text-sm font-bold text-gray-700 dark:text-neutral-300 group-hover:text-brand-red transition-colors">
-                                            {getNickname(email)}
-                                        </span>
-                                    </label>
+                                    <div key={email} className={`flex flex-col gap-2 p-4 rounded-2xl border transition-all ${selectedInvestorEmails.includes(email) ? 'bg-white dark:bg-neutral-800 border-brand-red shadow-lg' : 'bg-gray-50 dark:bg-neutral-900 border-transparent'}`}>
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <input 
+                                                type="checkbox"
+                                                checked={selectedInvestorEmails.includes(email)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedInvestorEmails(prev => [...prev, email]);
+                                                        if (!investorShares[email]) {
+                                                            setInvestorShares(prev => ({ ...prev, [email]: (100 / (selectedInvestorEmails.length + 1)).toFixed(0) }));
+                                                        }
+                                                    } else {
+                                                        setSelectedInvestorEmails(prev => prev.filter(e => e !== email));
+                                                    }
+                                                }}
+                                                className="w-5 h-5 rounded border-neutral-300 text-brand-red focus:ring-brand-red cursor-pointer"
+                                            />
+                                            <span className="text-sm font-black text-gray-700 dark:text-neutral-300 group-hover:text-brand-red transition-colors">
+                                                {getNickname(email)}
+                                            </span>
+                                        </label>
+                                        {selectedInvestorEmails.includes(email) && (
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <input 
+                                                    type="number"
+                                                    value={investorShares[email] || ''}
+                                                    onChange={(e) => setInvestorShares(prev => ({ ...prev, [email]: e.target.value }))}
+                                                    placeholder="Share %"
+                                                    className="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-900 border rounded-lg text-xs font-bold outline-none focus:ring-1 focus:ring-brand-red"
+                                                />
+                                                <span className="text-[10px] font-black text-neutral-400">%</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 ))}
                                 {investorEmails.length === 0 && (
-                                    <p className="text-xs text-neutral-400 font-bold italic">No known investors yet. Tag them in transactions first.</p>
+                                    <p className="text-xs text-neutral-400 font-bold italic col-span-3">No known investors yet. Tag them in transactions first.</p>
                                 )}
                             </div>
                         </div>
@@ -461,21 +495,22 @@ export const InventoryManager = () => {
                                                                                     {formatCurrency(stats.totalCosting)}
                                                                                 </p>
                                                                             </div>
-                                                                            {car.status === 'sold' ? (
-                                                                                <div className="space-y-1">
-                                                                                    <p className={`text-[9px] font-black uppercase tracking-[0.1em] ${isSelected ? 'text-emerald-400' : 'text-neutral-400'}`}>Profit</p>
-                                                                                    <p className={`text-sm font-black tabular-nums ${isSelected ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-500'}`}>
-                                                                                        +{formatCurrency(stats.netProfit)}
-                                                                                    </p>
-                                                                                </div>
-                                                                            ) : (
-                                                                                isAdmin && (
+                                                                            <div className="space-y-2">
+                                                                                {car.status === 'sold' && (
+                                                                                    <div className="space-y-1">
+                                                                                        <p className={`text-[9px] font-black uppercase tracking-[0.1em] ${isSelected ? 'text-emerald-400' : 'text-neutral-400'}`}>Profit</p>
+                                                                                        <p className={`text-sm font-black tabular-nums ${isSelected ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-500'}`}>
+                                                                                            +{formatCurrency(stats.netProfit)}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                )}
+                                                                                {isAdmin && (
                                                                                     <button 
                                                                                         onClick={(e) => {
                                                                                             e.stopPropagation();
                                                                                             router.push(`/log-expenses?vehicleId=${car.id}`);
                                                                                         }}
-                                                                                        className={`mt-auto py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all ${
+                                                                                        className={`w-full py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all ${
                                                                                             isSelected 
                                                                                             ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' 
                                                                                             : 'bg-neutral-50 border-neutral-100 text-neutral-400 hover:border-brand-red hover:text-brand-red'
@@ -483,8 +518,8 @@ export const InventoryManager = () => {
                                                                                     >
                                                                                         + ADD EXPENSE
                                                                                     </button>
-                                                                                )
-                                                                            )}
+                                                                                )}
+                                                                            </div>
                                                                         </div>
                                                                     </button>
                                                                 );
@@ -655,13 +690,22 @@ export const InventoryManager = () => {
                                                     </span>
                                                 </div>
                                                 <div className="mt-4 p-6 bg-red-50 dark:bg-red-950/20 rounded-[2rem] border border-red-100 dark:border-red-900/30">
-                                                    <div className="flex justify-between items-center mb-1">
+                                                    <div className="flex justify-between items-center mb-4">
                                                         <span className="text-[10px] font-black uppercase tracking-widest text-red-600 dark:text-red-400">Profit Distribution</span>
                                                         <span className="text-[9px] font-bold text-red-400 uppercase italic">50/50 Dealer split</span>
                                                     </div>
-                                                    <div className="flex justify-between items-end">
-                                                        <span className="text-2xl font-black text-brand-red">{formatCurrency(selectedCarStats!.profitPerPerson)}</span>
-                                                        <span className="text-[10px] font-bold text-red-600/60 uppercase tracking-tighter">Per Investor Share</span>
+                                                    <div className="space-y-3">
+                                                        {Object.entries(selectedCarStats!.investorSplits).map(([email, amount]) => (
+                                                            <div key={email} className="flex justify-between items-end border-b border-red-100 dark:border-red-900/20 pb-2 last:border-0">
+                                                                <div>
+                                                                    <p className="text-[10px] font-black uppercase text-red-600/60 tracking-widest">{getNickname(email)}</p>
+                                                                    <p className="text-xl font-black text-brand-red">{formatCurrency(amount)}</p>
+                                                                </div>
+                                                                <span className="text-[9px] font-bold text-red-400 uppercase italic">
+                                                                    {selectedCar.investors?.find(i => i.email === email)?.share || (100 / (selectedCar.investorEmails?.length || 1)).toFixed(0)}% Share
+                                                                </span>
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 </div>
                                             </>
@@ -805,26 +849,43 @@ export const InventoryManager = () => {
                                 />
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investors</label>
-                                <div className="flex flex-wrap gap-4 p-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl">
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investors & Define Shares (%)</label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {investorEmails.map(email => (
-                                        <label key={email} className="flex items-center gap-2 cursor-pointer group">
-                                            <input 
-                                                type="checkbox"
-                                                checked={selectedInvestorEmails.includes(email)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setSelectedInvestorEmails(prev => [...prev, email]);
-                                                    } else {
-                                                        setSelectedInvestorEmails(prev => prev.filter(e => e !== email));
-                                                    }
-                                                }}
-                                                className="w-5 h-5 rounded border-neutral-300 text-brand-red focus:ring-brand-red cursor-pointer"
-                                            />
-                                            <span className="text-sm font-bold text-gray-700 dark:text-neutral-300 group-hover:text-brand-red transition-colors">
-                                                {getNickname(email)}
-                                            </span>
-                                        </label>
+                                        <div key={email} className={`flex flex-col gap-2 p-4 rounded-2xl border transition-all ${selectedInvestorEmails.includes(email) ? 'bg-white dark:bg-neutral-800 border-brand-red shadow-lg' : 'bg-gray-50 dark:bg-neutral-900 border-transparent'}`}>
+                                            <label className="flex items-center gap-3 cursor-pointer group">
+                                                <input 
+                                                    type="checkbox"
+                                                    checked={selectedInvestorEmails.includes(email)}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedInvestorEmails(prev => [...prev, email]);
+                                                            if (!investorShares[email]) {
+                                                                setInvestorShares(prev => ({ ...prev, [email]: (100 / (selectedInvestorEmails.length + 1)).toFixed(0) }));
+                                                            }
+                                                        } else {
+                                                            setSelectedInvestorEmails(prev => prev.filter(e => e !== email));
+                                                        }
+                                                    }}
+                                                    className="w-5 h-5 rounded border-neutral-300 text-brand-red focus:ring-brand-red cursor-pointer"
+                                                />
+                                                <span className="text-sm font-black text-gray-700 dark:text-neutral-300 group-hover:text-brand-red transition-colors">
+                                                    {getNickname(email)}
+                                                </span>
+                                            </label>
+                                            {selectedInvestorEmails.includes(email) && (
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    <input 
+                                                        type="number"
+                                                        value={investorShares[email] || ''}
+                                                        onChange={(e) => setInvestorShares(prev => ({ ...prev, [email]: e.target.value }))}
+                                                        placeholder="Share %"
+                                                        className="w-full px-3 py-2 bg-gray-50 dark:bg-neutral-900 border rounded-lg text-xs font-bold outline-none focus:ring-1 focus:ring-brand-red"
+                                                    />
+                                                    <span className="text-[10px] font-black text-neutral-400">%</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     ))}
                                 </div>
                             </div>

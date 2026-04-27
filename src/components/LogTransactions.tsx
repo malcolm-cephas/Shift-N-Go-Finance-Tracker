@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useFinance } from '@/context/FinanceContext';
 import { TRANSACTION_CATEGORIES } from '@/types/finance';
-import { formatAppDate } from '@/utils/financeUtils';
+import { formatAppDate, parseCarName } from '@/utils/financeUtils';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
 
@@ -39,9 +39,7 @@ export const LogTransactions = () => {
     const vehicleHierarchy = useMemo(() => {
         const hierarchy: Record<string, Record<string, typeof inventory>> = {};
         inventory.forEach(car => {
-            const parts = car.name.split(' ');
-            const brand = parts[0] || 'Other';
-            const model = parts.slice(1).join(' ') || 'Standard';
+            const { brand, model } = parseCarName(car.name);
             
             if (!hierarchy[brand]) hierarchy[brand] = {};
             if (!hierarchy[brand][model]) hierarchy[brand][model] = [];
@@ -93,7 +91,13 @@ export const LogTransactions = () => {
         let visibleTransactions = transactions;
         if (isInvestor && investorEmail) {
             // Map of carId to its investor emails for efficient lookup
-            const carInvestorMap = new Map(inventory.map(c => [c.id, c.investorEmails?.map(e => e.toLowerCase()) || []]));
+            const carInvestorMap = new Map(inventory.map(c => [
+                c.id, 
+                [
+                    ...(c.investorEmails || []),
+                    ...(c.investors?.map(i => i.email) || [])
+                ].map(e => e.toLowerCase())
+            ]));
             
             visibleTransactions = transactions.filter(tx => {
                 // Check if investor is tagged directly in transaction
@@ -136,7 +140,7 @@ export const LogTransactions = () => {
     const groupedInventory = useMemo(() => {
         const groups: Record<string, typeof inventory> = {};
         inventory.forEach(item => {
-            const brand = item.name.split(' ')[0] || 'General';
+            const { brand } = parseCarName(item.name);
             if (!groups[brand]) groups[brand] = [];
             groups[brand].push(item);
         });

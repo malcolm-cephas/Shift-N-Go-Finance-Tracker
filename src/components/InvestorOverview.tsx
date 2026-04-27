@@ -23,7 +23,10 @@ export const InvestorOverview = () => {
 
     // Filter relevant cars and transactions for this specific investor
     const myCars = isSpecificInvestor 
-        ? inventory.filter(c => c.investorEmails?.some(e => e.toLowerCase() === investorEmail))
+        ? inventory.filter(c => 
+            c.investorEmails?.some(e => e.toLowerCase() === investorEmail) ||
+            c.investors?.some(inv => inv.email.toLowerCase() === investorEmail)
+        )
         : inventory;
 
     const myCarIds = new Set(myCars.map(c => c.id));
@@ -73,7 +76,18 @@ export const InvestorOverview = () => {
 
     // Personal Position = (Personal Cash Flow) + (Unsold Asset Value)
     const personalNetProfit = (personalTotalSales + personalOtherIncome - personalTotalExpenses) + personalInventoryValue;
-    const investorShare = personalNetProfit / 2;
+    
+    // Calculate actual share based on variable splits from sold cars
+    const myRealizedProfit = isSpecificInvestor 
+        ? inventory
+            .filter(i => i.status === 'sold')
+            .reduce((sum, car) => {
+                const stats = calculateCarStats(car, transactions);
+                return sum + (stats.investorSplits[investorEmail] || 0);
+            }, 0)
+        : 0;
+
+    const investorShare = isSpecificInvestor ? myRealizedProfit : (personalNetProfit / 2);
 
     const totalSales = transactions
         .filter(t => t.type === 'income' && t.category === 'Car Sale')
