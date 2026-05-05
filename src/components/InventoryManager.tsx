@@ -465,20 +465,22 @@ export const InventoryManager = () => {
                                 required 
                             />
                         </div>
-                        <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Funding Account (Logs Expense)</label>
-                            <select 
-                                value={purchaseAccountId}
-                                onChange={(e) => setPurchaseAccountId(e.target.value)}
-                                className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold text-xs uppercase"
-                                required
-                            >
-                                <option value="">Select Account</option>
-                                {accounts.map(acc => (
-                                    <option key={acc.id} value={acc.id}>{acc.name} ({acc.category})</option>
-                                ))}
-                            </select>
-                        </div>
+                        {accounts.length > 1 && (
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Funding Account (Logs Expense)</label>
+                                <select 
+                                    value={purchaseAccountId}
+                                    onChange={(e) => setPurchaseAccountId(e.target.value)}
+                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold text-xs uppercase"
+                                    required
+                                >
+                                    <option value="">Select Account</option>
+                                    {accounts.map(acc => (
+                                        <option key={acc.id} value={acc.id}>{acc.name} ({acc.category})</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <div className="md:col-span-3">
                             <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Tag Investors & Define Shares (%)</label>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -745,9 +747,13 @@ export const InventoryManager = () => {
                                         </div>
                                     )}
                                     <div className="min-w-0">
-                                        <h2 className="text-3xl font-black uppercase tracking-tighter truncate">{selectedCar.brand} {selectedCar.model}</h2>
+                                        <h2 className="text-3xl font-black uppercase tracking-tighter truncate">
+                                            {selectedCar.brand ? `${selectedCar.brand} ${selectedCar.model}` : parseCarName(selectedCar.name).brand + ' ' + parseCarName(selectedCar.name).model}
+                                        </h2>
                                         <div className="flex items-center gap-3 mt-1">
-                                            <p className="text-xs font-bold text-red-400 uppercase tracking-[0.3em] italic leading-none whitespace-nowrap">{selectedCar.year} • {selectedCar.variant}</p>
+                                            <p className="text-xs font-bold text-red-400 uppercase tracking-[0.3em] italic leading-none whitespace-nowrap">
+                                                {selectedCar.year || selectedCar.name.match(/\((\d{4})\)/)?.[1] || 'N/A'} • {selectedCar.variant || 'Standard'}
+                                            </p>
                                             <div className="flex gap-2">
                                                 <span className="px-2 py-0.5 rounded bg-white/10 text-[9px] font-black uppercase tracking-widest border border-white/20">{selectedCar.fuelType}</span>
                                                 <span className="px-2 py-0.5 rounded bg-white/10 text-[9px] font-black uppercase tracking-widest border border-white/20">{selectedCar.transmission}</span>
@@ -958,7 +964,7 @@ export const InventoryManager = () => {
             {/* Mark as Sold Modal */}
             {isMarkingSold && selectedCar && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-neutral-800 p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border-2 border-brand-red">
+                    <div className="bg-white dark:bg-neutral-800 p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border-2 border-brand-red max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">Finalize Sale</h3>
                         <p className="text-gray-500 text-sm mb-6 font-bold">Completing the lifecycle for <span className="text-brand-red">{selectedCar.name}</span></p>
                         
@@ -984,19 +990,21 @@ export const InventoryManager = () => {
                                     className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-900 border rounded-xl outline-none font-bold focus:ring-2 focus:ring-brand-red"
                                 />
                             </div>
-                            <div>
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Account Receiving Payment</label>
-                                <select 
-                                    value={soldAccountId}
-                                    onChange={(e) => setSoldAccountId(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-900 border rounded-xl outline-none font-bold focus:ring-2 focus:ring-brand-red"
-                                    required
-                                >
-                                    {accounts.map(acc => (
-                                        <option key={acc.id} value={acc.id}>{acc.name}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            {accounts.length > 1 && (
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Account Receiving Payment</label>
+                                    <select 
+                                        value={soldAccountId}
+                                        onChange={(e) => setSoldAccountId(e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-900 border rounded-xl outline-none font-bold focus:ring-2 focus:ring-brand-red"
+                                        required
+                                    >
+                                        {accounts.map(acc => (
+                                            <option key={acc.id} value={acc.id}>{acc.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                             <div className="pt-4 flex gap-4">
                                 <button 
                                     type="button"
@@ -1020,7 +1028,7 @@ export const InventoryManager = () => {
             {/* Edit Vehicle Modal */}
             {isEditing && selectedCar && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-neutral-800 p-8 rounded-[2.5rem] shadow-2xl max-w-2xl w-full border-2 border-brand-red">
+                    <div className="bg-white dark:bg-neutral-800 p-8 rounded-[2.5rem] shadow-2xl max-w-2xl w-full border-2 border-brand-red max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <h3 className="text-2xl font-black uppercase tracking-tighter mb-6">Update Vehicle Details</h3>
                         <form onSubmit={handleEditCarSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
@@ -1293,7 +1301,7 @@ export const InventoryManager = () => {
             {/* Reserve Vehicle Modal */}
             {isReserving && selectedCar && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-neutral-800 p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border-2 border-amber-500">
+                    <div className="bg-white dark:bg-neutral-800 p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full border-2 border-amber-500 max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <h3 className="text-2xl font-black uppercase tracking-tighter mb-2">Reserve Vehicle</h3>
                         <p className="text-gray-500 text-sm mb-6 font-bold">Locking the unit for <span className="text-amber-500">{selectedCar.name}</span></p>
                         
@@ -1309,20 +1317,22 @@ export const InventoryManager = () => {
                                     required 
                                 />
                             </div>
-                            <div>
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Account Receiving Payment</label>
-                                <select 
-                                    value={advanceAccountId}
-                                    onChange={(e) => setAdvanceAccountId(e.target.value)}
-                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-900 border rounded-xl outline-none font-bold focus:ring-2 focus:ring-amber-500 text-xs"
-                                    required
-                                >
-                                    <option value="">Select Account</option>
-                                    {accounts.map(acc => (
-                                        <option key={acc.id} value={acc.id}>{acc.name}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            {accounts.length > 1 && (
+                                <div>
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Account Receiving Payment</label>
+                                    <select 
+                                        value={advanceAccountId}
+                                        onChange={(e) => setAdvanceAccountId(e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-900 border rounded-xl outline-none font-bold focus:ring-2 focus:ring-amber-500 text-xs"
+                                        required
+                                    >
+                                        <option value="">Select Account</option>
+                                        {accounts.map(acc => (
+                                            <option key={acc.id} value={acc.id}>{acc.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                             <div className="pt-4 flex gap-4">
                                 <button 
                                     type="button"

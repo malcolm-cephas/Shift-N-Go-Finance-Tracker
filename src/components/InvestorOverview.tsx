@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useFinance } from '@/context/FinanceContext';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useAuth } from '@/context/AuthContext';
-import { calculateCarStats, formatAppDate } from '@/utils/financeUtils';
+import { calculateCarStats, formatAppDate, parseCarName } from '@/utils/financeUtils';
 
 export const InvestorOverview = () => {
     const { getAccountsWithBalances, transactions, inventory } = useFinance();
@@ -291,7 +291,13 @@ export const InvestorOverview = () => {
                                                 
                                             return (
                                                 <tr key={car.id} className="hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-colors">
-                                                    <td className="py-4 font-bold text-sm">{car.brand} {car.model} ({car.year})</td>
+                                                    <td className="py-4 font-bold text-sm">
+                                                        {car.brand ? (
+                                                            `${car.brand} ${car.model} (${car.year})`
+                                                        ) : (
+                                                            car.name || `${parseCarName(car.name).brand} ${parseCarName(car.name).model} (${car.year || car.name.match(/\((\d{4})\)/)?.[1] || 'N/A'})`
+                                                        )}
+                                                    </td>
                                                     <td className="py-4">
                                                         <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
                                                             car.status === 'sold' ? 'bg-blue-100 text-blue-700' :

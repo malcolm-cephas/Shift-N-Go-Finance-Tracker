@@ -216,23 +216,25 @@ export const LogTransactions = () => {
                                 />
                             </div>
 
-                            <div>
-                                <label htmlFor="account" className="block text-xs font-bold text-gray-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
-                                    Affected Account
-                                </label>
-                                <select
-                                    id="account"
-                                    value={accountId}
-                                    onChange={(e) => setAccountId(e.target.value)}
-                                    className="w-full px-3 py-2 border rounded-md dark:bg-neutral-700 dark:border-neutral-600"
-                                    required
-                                >
-                                    <option value="">Select an account</option>
-                                    {accounts.map(acc => (
-                                        <option key={acc.id} value={acc.id}>{acc.name}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            {accounts.length > 1 && (
+                                <div>
+                                    <label htmlFor="account" className="block text-xs font-bold text-gray-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">
+                                        Affected Account
+                                    </label>
+                                    <select
+                                        id="account"
+                                        value={accountId}
+                                        onChange={(e) => setAccountId(e.target.value)}
+                                        className="w-full px-3 py-2 border rounded-md dark:bg-neutral-700 dark:border-neutral-600"
+                                        required
+                                    >
+                                        <option value="">Select an account</option>
+                                        {accounts.map(acc => (
+                                            <option key={acc.id} value={acc.id}>{acc.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
 
                             <div>
                                 <label htmlFor="category" className="block text-xs font-bold text-gray-500 dark:text-neutral-400 mb-1 uppercase tracking-wider">

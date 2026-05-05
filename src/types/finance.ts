@@ -58,12 +58,7 @@ export interface AccountWithHistory extends Account {
 }
 
 export const ACCOUNT_CATEGORIES = [
-  'Bank Account',
-  'Cash',
-  'Mobile Money (UPI)',
-  'Credit Card',
-  'Business Loans',
-  'Other'
+  'Main Business Account'
 ];
 
 export const TRANSACTION_CATEGORIES = {
