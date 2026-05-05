@@ -13,13 +13,27 @@ export const InvestorOverview = () => {
     const { role, user } = useAuth();
     const accounts = getAccountsWithBalances();
     const [mounted, setMounted] = useState(false);
-    const investorEmail = user?.email?.toLowerCase();
+    const [selectedInvestor, setSelectedInvestor] = useState<string>('ALL');
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    const isSpecificInvestor = role === 'INVESTOR' && investorEmail;
+    // Extract all unique investors for the admin filter
+    const allInvestors = Array.from(new Set([
+        ...transactions.flatMap(t => t.investorEmails || []),
+        ...inventory.flatMap(c => [
+            ...(c.investorEmails || []),
+            ...(c.investors?.map(i => i.email) || [])
+        ])
+    ])).map(e => e.toLowerCase()).filter(Boolean);
+
+    const effectiveInvestorEmail = role === 'INVESTOR' 
+        ? user?.email?.toLowerCase() 
+        : (selectedInvestor !== 'ALL' ? selectedInvestor : null);
+
+    const isSpecificInvestor = !!effectiveInvestorEmail;
+    const investorEmail = effectiveInvestorEmail;
 
     // Filter relevant cars and transactions for this specific investor
     const myCars = isSpecificInvestor 
@@ -45,37 +59,47 @@ export const InvestorOverview = () => {
             .reduce((sum, t) => sum + t.amount, 0)
         : 0;
 
+    const activeCapitalDeployed = isSpecificInvestor && investorEmail
+        ? myCars
+            .filter(c => c.status !== 'sold')
+            .reduce((sum, car) => {
+                const investorObj = car.investors?.find(i => i.email.toLowerCase() === investorEmail);
+                if (investorObj) {
+                    return sum + (car.purchasePrice * investorObj.share / 100);
+                }
+                if (car.investorEmails?.some(e => e.toLowerCase() === investorEmail)) {
+                    return sum + (car.purchasePrice / car.investorEmails.length);
+                }
+                return sum;
+            }, 0)
+        : 0;
+
     const inventoryValue = inventory
         .filter(i => i.status !== 'sold')
         .reduce((sum, i) => sum + i.purchasePrice, 0);
 
-    const totalAssets = accounts
-        .filter(a => a.type === 'asset')
+    const totalAccountBalances = accounts
         .reduce((sum, acc) => sum + acc.currentBalance, 0);
 
-    const totalLiabilities = accounts
-        .filter(a => a.type === 'liability')
-        .reduce((sum, acc) => sum + acc.currentBalance, 0);
-
-    // Operational Profit (Aggregate or Personalized)
-    const personalTotalSales = myTransactions
+    // Operational Profit (Aggregate or Portfolio)
+    const portfolioTotalSales = myTransactions
         .filter(t => t.type === 'income' && t.category === 'Car Sale')
         .reduce((sum, t) => sum + t.amount, 0);
 
-    const personalTotalExpenses = myTransactions
+    const portfolioTotalExpenses = myTransactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
 
-    const personalOtherIncome = myTransactions
+    const portfolioOtherIncome = myTransactions
         .filter(t => t.type === 'income' && t.category !== 'Car Sale' && t.category !== 'Owner Investment')
         .reduce((sum, t) => sum + t.amount, 0);
 
-    const personalInventoryValue = myCars
+    const portfolioInventoryValue = myCars
         .filter(i => i.status !== 'sold')
         .reduce((sum, i) => sum + i.purchasePrice, 0);
 
-    // Personal Position = (Personal Cash Flow) + (Unsold Asset Value)
-    const personalNetProfit = (personalTotalSales + personalOtherIncome - personalTotalExpenses) + personalInventoryValue;
+    // Portfolio Position = (Portfolio Cash Flow) + (Unsold Asset Value)
+    const portfolioNetProfit = (portfolioTotalSales + portfolioOtherIncome - portfolioTotalExpenses) + portfolioInventoryValue;
     
     // Calculate actual share based on variable splits from sold cars
     const myRealizedProfit = isSpecificInvestor 
@@ -87,7 +111,7 @@ export const InvestorOverview = () => {
             }, 0)
         : 0;
 
-    const investorShare = isSpecificInvestor ? myRealizedProfit : (personalNetProfit / 2);
+    const investorShare = isSpecificInvestor ? myRealizedProfit : (portfolioNetProfit / 2);
 
     const totalSales = transactions
         .filter(t => t.type === 'income' && t.category === 'Car Sale')
@@ -181,12 +205,27 @@ export const InvestorOverview = () => {
             <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left gap-4 border-b pb-8 print:hidden">
                 <div>
                     <h1 className="text-4xl font-extrabold text-gray-900 dark:text-neutral-100 italic">Investor Progress Report</h1>
-                    <p className="text-lg text-gray-500 mt-2 font-medium">Shift N Go — {isSpecificInvestor ? 'Personalized Portfolio' : 'Full Dealership Aggregate'}</p>
+                    <p className="text-lg text-gray-500 mt-2 font-medium">Shift N Go — {isSpecificInvestor ? 'Investor Portfolio' : 'Full Dealership Aggregate'}</p>
                 </div>
-                <div className="flex flex-col items-center md:items-end gap-2">
+                <div className="flex flex-col md:flex-row items-center md:items-end gap-4">
+                    {(role === 'ADMIN' || role === 'MANAGER') && allInvestors.length > 0 && (
+                        <div className="flex flex-col items-center md:items-end">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Filter by Investor</label>
+                            <select
+                                value={selectedInvestor}
+                                onChange={(e) => setSelectedInvestor(e.target.value)}
+                                className="bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-red font-medium text-gray-700 dark:text-neutral-200"
+                            >
+                                <option value="ALL">All Investors (Dealership Aggregate)</option>
+                                {allInvestors.map(email => (
+                                    <option key={email} value={email}>{email}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                     <button
                         onClick={handlePrint}
-                        className="bg-neutral-800 text-white px-4 py-2 rounded-md hover:bg-neutral-700 transition-colors text-sm print:hidden"
+                        className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-bold px-4 py-2 rounded-md hover:scale-[1.02] active:scale-95 transition-all text-sm print:hidden"
                     >
                         Print PDF Report 📄
                     </button>
@@ -194,28 +233,88 @@ export const InvestorOverview = () => {
             </div>
 
             {/* Personalized Stats for Investors */}
-            {isSpecificInvestor && (
-                <div className="bg-neutral-900 dark:bg-black p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group border-2 border-brand-red">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform duration-700 text-6xl">🏎️</div>
-                    <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-                        <div>
-                            <p className="text-red-400 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Active Portfolio Insight</p>
-                            <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">{user.name || user.email?.split('@')[0]}'s Investment</h2>
+            {isSpecificInvestor && investorEmail && (
+                <div className="space-y-6">
+                    <div className="bg-neutral-900 dark:bg-black p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group border-2 border-brand-red">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform duration-700 text-6xl">🏎️</div>
+                        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                            <div>
+                                <p className="text-red-400 text-[10px] font-black uppercase tracking-[0.4em] mb-2 italic">Active Portfolio Insight</p>
+                                <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none">{user?.email?.toLowerCase() === investorEmail ? (user.name || user.email?.split('@')[0]) : investorEmail.split('@')[0]}'s Investment</h2>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 md:gap-8 text-center md:text-left">
+                                <div className="min-w-max">
+                                    <p className="text-red-400/60 text-[10px] font-black uppercase tracking-widest mb-1">Total Capital</p>
+                                    <p className="text-2xl font-black text-white tabular-nums">{formatCurrency(myCapitalContribution)}</p>
+                                </div>
+                                <div className="min-w-max">
+                                    <p className="text-red-400/60 text-[10px] font-black uppercase tracking-widest mb-1">Active Capital Deployed</p>
+                                    <p className="text-2xl font-black text-white tabular-nums">{formatCurrency(activeCapitalDeployed)}</p>
+                                </div>
+                                <div className="min-w-max">
+                                    <p className="text-red-400/60 text-[10px] font-black uppercase tracking-widest mb-1">Realized Profit</p>
+                                    <p className="text-2xl font-black text-white tabular-nums">{formatCurrency(investorShare)}</p>
+                                </div>
+                                <div className="min-w-max">
+                                    <p className="text-red-400/60 text-[10px] font-black uppercase tracking-widest mb-1">Vehicles Funded</p>
+                                    <p className="text-2xl font-black text-brand-red tabular-nums">{myCars.length}</p>
+                                </div>
+                            </div>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12 text-center md:text-left">
-                            <div className="min-w-max">
-                                <p className="text-red-400/60 text-[10px] font-black uppercase tracking-widest mb-1">Capital Provided</p>
-                                <p className="text-3xl font-black text-white tabular-nums">{formatCurrency(myCapitalContribution)}</p>
-                            </div>
-                            <div className="min-w-max">
-                                <p className="text-red-400/60 text-[10px] font-black uppercase tracking-widest mb-1">Your 50% Share</p>
-                                <p className="text-3xl font-black text-white tabular-nums">{formatCurrency(investorShare)}</p>
-                            </div>
-                            <div className="min-w-max">
-                                <p className="text-red-400/60 text-[10px] font-black uppercase tracking-widest mb-1">Vehicles Funded</p>
-                                <p className="text-3xl font-black text-brand-red tabular-nums">{myCars.length}</p>
-                            </div>
+                    </div>
+
+                    {/* Invested Vehicles Table */}
+                    <div className="bg-white dark:bg-neutral-800 p-6 rounded-[2rem] border border-gray-100 dark:border-neutral-700 shadow-lg">
+                        <div className="mb-6">
+                            <h3 className="text-xl font-black uppercase tracking-tight">Invested Vehicles</h3>
+                            <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Vehicles funded by {investorEmail}</p>
                         </div>
+                        {myCars.length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="border-b-2 border-gray-100 dark:border-neutral-700">
+                                            <th className="pb-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Vehicle</th>
+                                            <th className="pb-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                                            <th className="pb-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Price</th>
+                                            <th className="pb-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Share %</th>
+                                            <th className="pb-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Capital Deployed</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100 dark:divide-neutral-700">
+                                        {myCars.map(car => {
+                                            const investorObj = car.investors?.find(i => i.email.toLowerCase() === investorEmail);
+                                            const sharePercent = investorObj ? `${investorObj.share}%` : (car.investorEmails?.length ? `${(100/car.investorEmails.length).toFixed(0)}% (Auto)` : '50% (Default)');
+                                            const deployed = investorObj 
+                                                ? (car.purchasePrice * investorObj.share / 100)
+                                                : (car.investorEmails?.length ? (car.purchasePrice / car.investorEmails.length) : (car.purchasePrice / 2));
+                                                
+                                            return (
+                                                <tr key={car.id} className="hover:bg-gray-50 dark:hover:bg-neutral-700/50 transition-colors">
+                                                    <td className="py-4 font-bold text-sm">{car.brand} {car.model} ({car.year})</td>
+                                                    <td className="py-4">
+                                                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                                                            car.status === 'sold' ? 'bg-blue-100 text-blue-700' :
+                                                            car.status === 'reserved' ? 'bg-yellow-100 text-yellow-700' :
+                                                            'bg-green-100 text-green-700'
+                                                        }`}>
+                                                            {car.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4 font-medium text-sm tabular-nums text-gray-500">{formatCurrency(car.purchasePrice)}</td>
+                                                    <td className="py-4 font-bold text-gray-700 dark:text-gray-300 text-sm">{sharePercent}</td>
+                                                    <td className="py-4 font-black text-brand-red text-sm tabular-nums">{car.status !== 'sold' ? formatCurrency(deployed) : '-'}</td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="text-center py-8 bg-gray-50 dark:bg-neutral-900 rounded-xl border border-dashed border-gray-200 dark:border-neutral-700">
+                                <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">No vehicles funded by this investor.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -336,25 +435,21 @@ export const InvestorOverview = () => {
                     <h2 className="text-xl font-bold border-b pb-2">Business Equity</h2>
                     <div className="space-y-4">
                         <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
-                            <span className="font-medium">Total Current Cash (Accounts)</span>
-                            <span className="text-brand-red font-bold">{formatCurrency(totalAssets)}</span>
+                            <span className="font-medium">Total Account Balances</span>
+                            <span className="text-brand-red font-bold">{formatCurrency(totalAccountBalances)}</span>
                         </div>
                         <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
                             <span className="font-medium">Total Inventory Value</span>
                             <span className="text-brand-red font-bold">{formatCurrency(inventoryValue)}</span>
                         </div>
-                        <div className="flex justify-between items-center bg-white dark:bg-neutral-800 p-3 rounded-lg border dark:border-neutral-600 print:border-none print:px-0">
-                            <span className="font-medium">Total Liabilities</span>
-                            <span className="text-red-600 font-bold">({formatCurrency(totalLiabilities)})</span>
-                        </div>
                         <div className="pt-4 border-t-2 border-dashed border-gray-200 dark:border-neutral-700">
                             <div className="flex justify-between items-center p-4 bg-brand-red rounded-xl shadow-lg shadow-red-600/20 print:bg-white print:border-2 print:border-brand-red print:shadow-none">
                                 <span className="text-lg font-bold text-white uppercase tracking-wider print:text-brand-red">Business Net Worth</span>
-                                <span className="text-2xl font-black text-white print:text-brand-red">{formatCurrency(totalAssets + inventoryValue - totalLiabilities)}</span>
+                                <span className="text-2xl font-black text-white print:text-brand-red">{formatCurrency(totalAccountBalances + inventoryValue)}</span>
                             </div>
                         </div>
                         <div className="flex justify-between items-center p-3 text-sm text-gray-500 italic">
-                            <span>* Calculated using the most recent recorded balances for all business vehicles.</span>
+                            <span>* Calculated using the most recent recorded balances for all accounts.</span>
                         </div>
                     </div>
                 </div>

@@ -1,36 +1,35 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Account, ACCOUNT_CATEGORIES, ACCOUNT_CATEGORIES_TYPE } from '@/types/finance';
+import { Account, ACCOUNT_CATEGORIES } from '@/types/finance';
 
 interface ManageAccountModalProps {
   account: Account;
-  onSave: (updates: Pick<Account, 'name' | 'category' | 'type'>) => void;
+  onSave: (updates: Pick<Account, 'name' | 'category'>) => void;
   onClose: () => void;
 }
 
 export const ManageAccountModal = ({ account, onSave, onClose }: ManageAccountModalProps) => {
   const [name, setName] = useState(account.name);
-  const [type, setType] = useState<Account['type']>(account.type);
   const [category, setCategory] = useState(account.category);
 
   const categoryOptions = useMemo(() => {
-    const options = (ACCOUNT_CATEGORIES as ACCOUNT_CATEGORIES_TYPE)[type];
+    const options = ACCOUNT_CATEGORIES as readonly string[];
     return options.includes(category as string) ? options : [...options, category];
-  }, [category, type]);
+  }, [category]);
 
   useEffect(() => {
-    const options = (ACCOUNT_CATEGORIES as ACCOUNT_CATEGORIES_TYPE)[type];
+    const options = ACCOUNT_CATEGORIES as readonly string[];
     if (!options.includes(category)) {
       setCategory(options[0]);
     }
-  }, [category, type]);
+  }, [category]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) return;
-    onSave({ name: trimmedName, category, type });
+    onSave({ name: trimmedName, category });
   };
 
   return (
@@ -39,7 +38,7 @@ export const ManageAccountModal = ({ account, onSave, onClose }: ManageAccountMo
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-neutral-100">Edit Account</h2>
-            <p className="text-sm text-gray-500 dark:text-neutral-400">Update the account name, type, or category.</p>
+            <p className="text-sm text-gray-500 dark:text-neutral-400">Update the account name or category.</p>
           </div>
           <button
             onClick={onClose}
@@ -66,21 +65,7 @@ export const ManageAccountModal = ({ account, onSave, onClose }: ManageAccountMo
             />
           </div>
 
-          <div>
-            <label htmlFor="account-type" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">
-              Account Type
-            </label>
-            <select
-              id="account-type"
-              value={type}
-              onChange={(e) => setType(e.target.value as Account['type'])}
-              className="w-full border border-gray-300 dark:border-neutral-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-brand-red focus:border-brand-red/20 bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100"
-            >
-              <option value="asset">Asset</option>
-              <option value="liability">Liability</option>
-              <option value="equity">Equity</option>
-            </select>
-          </div>
+
 
           <div>
             <label htmlFor="account-category" className="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">

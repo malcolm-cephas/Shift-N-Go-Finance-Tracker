@@ -19,7 +19,7 @@ export const BalanceSheet = () => {
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [accountToDelete, setAccountToDelete] = useState<Account | null>(null);
 
-  const handleSaveAccount = (updates: Pick<Account, 'name' | 'category' | 'type'>) => {
+  const handleSaveAccount = (updates: Pick<Account, 'name' | 'category'>) => {
     if (!editingAccount) return;
     updateAccount(editingAccount.id, updates);
     setEditingAccount(null);
@@ -29,25 +29,20 @@ export const BalanceSheet = () => {
     .filter(i => i.status !== 'sold')
     .reduce((sum, i) => sum + i.purchasePrice, 0);
 
-  const groupAccountsByType = (accounts: AccountWithBalance[]) => {
+  const groupAccountsByCategory = (accounts: AccountWithBalance[]) => {
     const groups = accounts.reduce((groups, account) => {
-      if (!groups[account.type]) {
-        groups[account.type] = {};
+      if (!groups[account.category]) {
+        groups[account.category] = [];
       }
-      if (!groups[account.type][account.category]) {
-        groups[account.type][account.category] = [];
-      }
-      groups[account.type][account.category].push(account);
+      groups[account.category].push(account);
       return groups;
-    }, {} as Record<string, Record<string, AccountWithBalance[]>>);
+    }, {} as Record<string, AccountWithBalance[]>);
 
-    // Inject Inventory as a virtual asset category
+    // Inject Inventory as a virtual account category
     if (inventoryValue > 0) {
-      if (!groups['asset']) groups['asset'] = {};
-      groups['asset']['Vehicle Inventory (Stock)'] = [{
+      groups['Vehicle Inventory (Stock)'] = [{
         id: 'virtual-inventory',
         name: 'Showroom Stock Value',
-        type: 'asset',
         category: 'Vehicle Inventory (Stock)',
         createdAt: new Date(),
         currentBalance: inventoryValue
@@ -57,27 +52,18 @@ export const BalanceSheet = () => {
     return groups;
   };
 
-  const calculateTotalByType = (accounts: AccountWithBalance[], type: string) => {
-    const baseTotal = accounts
-      .filter(account => account.type === type)
-      .reduce((total, account) => total + account.currentBalance, 0);
-    
-    // Add inventory value to assets
-    if (type === 'asset') return baseTotal + inventoryValue;
-    return baseTotal;
+  const calculateTotal = (accounts: AccountWithBalance[]) => {
+    const baseTotal = accounts.reduce((total, account) => total + account.currentBalance, 0);
+    return baseTotal + inventoryValue;
   };
 
-  const groupedAccounts = groupAccountsByType(accountsWithBalances);
-  const totalAssets = calculateTotalByType(accountsWithBalances, 'asset');
-  const totalLiabilities = calculateTotalByType(accountsWithBalances, 'liability');
-  const totalEquity = calculateTotalByType(accountsWithBalances, 'equity');
-  const netWorth = totalAssets - totalLiabilities;
+  const groupedAccounts = groupAccountsByCategory(accountsWithBalances);
+  const totalValue = calculateTotal(accountsWithBalances);
 
-  const AccountSection = ({ title, accounts, total, type }: {
+  const AccountSection = ({ title, accounts, total }: {
     title: string;
     accounts: Record<string, AccountWithBalance[]>;
     total: number;
-    type: 'asset' | 'liability' | 'equity';
   }) => (
     <div className="mb-8">
       <h2 className="text-xl font-bold text-gray-800 dark:text-neutral-100 mb-4 pb-2 border-b border-gray-300 dark:border-neutral-600">
@@ -98,7 +84,7 @@ export const BalanceSheet = () => {
                     }`}>
                     {formatCurrency(account.currentBalance)}
                   </span>
-                  {!isReadOnly && (
+                  {!isReadOnly && account.id !== 'virtual-inventory' && (
                     <>
                       <button
                         onClick={() => setEditingAccount(account)}
@@ -130,11 +116,7 @@ export const BalanceSheet = () => {
         </div>
       ))}
       <div className="text-right font-bold text-lg border-t border-gray-300 dark:border-neutral-600 pt-2 mt-4">
-        <span className={`${
-          type === 'asset' ? 'text-green-700 dark:text-green-400' : 
-          type === 'liability' ? 'text-red-700 dark:text-red-400' : 
-          'text-brand-blue dark:text-brand-blue font-bold'
-        }`}>
+        <span className="text-brand-blue dark:text-brand-blue font-bold">
           Total {title}: {formatCurrency(total)}
         </span>
       </div>
@@ -173,59 +155,25 @@ export const BalanceSheet = () => {
             As of {formatAppDate(new Date())}
           </p>
         </div>
-        {groupedAccounts.asset && (
-          <AccountSection
-            title="Assets"
-            accounts={groupedAccounts.asset}
-            total={totalAssets}
-            type="asset"
-          />
-        )}
-
-        {/* Liabilities */}
-        {groupedAccounts.liability && (
-          <AccountSection
-            title="Liabilities"
-            accounts={groupedAccounts.liability}
-            total={totalLiabilities}
-            type="liability"
-          />
-        )}
-
-        {/* Equity */}
-        {groupedAccounts.equity && (
-          <AccountSection
-            title="Equity"
-            accounts={groupedAccounts.equity}
-            total={totalEquity}
-            type="equity"
-          />
-        )}
+        
+        <AccountSection
+          title="Accounts"
+          accounts={groupedAccounts}
+          total={totalValue}
+        />
 
         {/* Net Worth Summary */}
         <div className="border-t-2 border-gray-200 dark:border-neutral-700 pt-6 mt-8">
           <div className="bg-neutral-50 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 rounded-xl p-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+            <div className="flex justify-center text-center">
               <div>
-                <div className="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-1">Total Assets</div>
-                <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                  {formatCurrency(totalAssets)}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-1">Total Liabilities</div>
-                <div className="text-lg font-bold text-red-600 dark:text-red-400">
-                  {formatCurrency(totalLiabilities)}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm font-bold text-brand-red uppercase tracking-wider mb-1">Business Net Value</div>
+                <div className="text-sm font-bold text-brand-red uppercase tracking-wider mb-1">Total Business Value</div>
                 <div className={`text-2xl font-black ${
-                  netWorth > 0 ? 'text-green-600 dark:text-green-400' : 
-                  netWorth < 0 ? 'text-red-600 dark:text-red-400' : 
+                  totalValue > 0 ? 'text-green-600 dark:text-green-400' : 
+                  totalValue < 0 ? 'text-red-600 dark:text-red-400' : 
                   'text-gray-900 dark:text-white'
                 }`}>
-                  {formatCurrency(netWorth)}
+                  {formatCurrency(totalValue)}
                 </div>
               </div>
             </div>

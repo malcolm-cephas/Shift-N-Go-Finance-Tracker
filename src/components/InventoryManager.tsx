@@ -32,7 +32,12 @@ export const InventoryManager = () => {
     const [selectedCarId, setSelectedCarId] = useState<string | null>(null);
 
     // Form State
-    const [name, setName] = useState('');
+    const [brand, setBrand] = useState('');
+    const [model, setModel] = useState('');
+    const [year, setYear] = useState(new Date().getFullYear());
+    const [variant, setVariant] = useState('');
+    const [fuelType, setFuelType] = useState<InventoryItem['fuelType']>('Petrol');
+    const [transmission, setTransmission] = useState<InventoryItem['transmission']>('Manual');
     const [purchasePrice, setPurchasePrice] = useState('');
     const [licensePlate, setLicensePlate] = useState('');
     const [selectedInvestorEmails, setSelectedInvestorEmails] = useState<string[]>([]);
@@ -66,9 +71,15 @@ export const InventoryManager = () => {
         
         // 1. Add to Inventory
         const newItem = addInventoryItem({
-            name,
+            name: `${brand} ${model} (${year})`,
+            brand,
+            model,
+            year,
+            variant,
+            fuelType,
+            transmission,
             purchasePrice: price,
-            licensePlate: licensePlate || undefined,
+            licensePlate,
             status: 'available',
             investorEmails: selectedInvestorEmails.length > 0 ? selectedInvestorEmails : undefined,
             investors: selectedInvestorEmails.length > 0 ? selectedInvestorEmails.map(email => ({
@@ -86,13 +97,18 @@ export const InventoryManager = () => {
                 amount: price,
                 type: 'expense',
                 category: 'Car Purchase (Inventory)',
-                description: `Acquisition of ${newItem.name} (${newItem.licensePlate || 'No Plate'})`,
+                description: `Acquisition of ${newItem.name} (${newItem.licensePlate})`,
                 date: new Date()
             });
         }
 
         setIsAdding(false);
-        setName('');
+        setBrand('');
+        setModel('');
+        setYear(new Date().getFullYear());
+        setVariant('');
+        setFuelType('Petrol');
+        setTransmission('Manual');
         setPurchasePrice('');
         setLicensePlate('');
         setSelectedInvestorEmails([]);
@@ -186,9 +202,15 @@ export const InventoryManager = () => {
         e.preventDefault();
         if (!selectedCarId) return;
         updateInventoryItem(selectedCarId, {
-            name,
+            name: `${brand} ${model} (${year})`,
+            brand,
+            model,
+            year,
+            variant,
+            fuelType,
+            transmission,
             purchasePrice: parseFloat(purchasePrice),
-            licensePlate: licensePlate || undefined,
+            licensePlate,
             investorEmails: selectedInvestorEmails.length > 0 ? selectedInvestorEmails : undefined,
             investors: selectedInvestorEmails.length > 0 ? selectedInvestorEmails.map(email => ({
                 email,
@@ -208,7 +230,12 @@ export const InventoryManager = () => {
 
     const startEditing = () => {
         if (!selectedCar) return;
-        setName(selectedCar.name);
+        setBrand(selectedCar.brand || '');
+        setModel(selectedCar.model || '');
+        setYear(selectedCar.year || new Date().getFullYear());
+        setVariant(selectedCar.variant || '');
+        setFuelType(selectedCar.fuelType || 'Petrol');
+        setTransmission(selectedCar.transmission || 'Manual');
         setPurchasePrice(selectedCar.purchasePrice.toString());
         setLicensePlate(selectedCar.licensePlate || '');
         setSelectedInvestorEmails(selectedCar.investorEmails || selectedCar.investors?.map(i => i.email) || []);
@@ -225,9 +252,11 @@ export const InventoryManager = () => {
     const [statusFilter, setStatusFilter] = useState<'all' | 'available' | 'reserved' | 'sold'>('all');
     const [expandedBrands, setExpandedBrands] = useState<string[]>([]);
     const [expandedModels, setExpandedModels] = useState<string[]>([]);
+    const [expandedYears, setExpandedYears] = useState<string[]>([]);
+    const [expandedVariants, setExpandedVariants] = useState<string[]>([]);
 
-    const getBrand = (name: string) => parseCarName(name).brand;
-    const getModel = (name: string) => parseCarName(name).model;
+    const getBrand = (car: InventoryItem) => car.brand || parseCarName(car.name).brand;
+    const getModel = (car: InventoryItem) => car.model || parseCarName(car.name).model;
 
     const filteredInventory = useMemo(() => {
         return displayInventory.filter(car => {
@@ -239,26 +268,43 @@ export const InventoryManager = () => {
     }, [displayInventory, searchTerm, statusFilter]);
 
     const groupedInventory = useMemo(() => {
-        const groups: Record<string, Record<string, InventoryItem[]>> = {};
+        const groups: Record<string, Record<string, Record<number, Record<string, InventoryItem[]>>>> = {};
         filteredInventory.forEach(car => {
-            const brand = getBrand(car.name);
-            const model = getModel(car.name);
-            if (!groups[brand]) groups[brand] = {};
-            if (!groups[brand][model]) groups[brand][model] = [];
-            groups[brand][model].push(car);
+            const b = getBrand(car);
+            const m = getModel(car);
+            const y = car.year || 0;
+            const v = car.variant || 'Standard';
+
+            if (!groups[b]) groups[b] = {};
+            if (!groups[b][m]) groups[b][m] = {};
+            if (!groups[b][m][y]) groups[b][m][y] = {};
+            if (!groups[b][m][y][v]) groups[b][m][y][v] = [];
+            groups[b][m][y][v].push(car);
         });
         return groups;
     }, [filteredInventory]);
 
     const toggleBrand = (brand: string) => {
-        setExpandedBrands(prev => 
-            prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand]
+        setExpandedBrands((prev: string[]) => 
+            prev.includes(brand) ? prev.filter((b: string) => b !== brand) : [...prev, brand]
         );
     };
 
     const toggleModel = (modelKey: string) => {
-        setExpandedModels(prev => 
-            prev.includes(modelKey) ? prev.filter(m => m !== modelKey) : [...prev, modelKey]
+        setExpandedModels((prev: string[]) => 
+            prev.includes(modelKey) ? prev.filter((m: string) => m !== modelKey) : [...prev, modelKey]
+        );
+    };
+
+    const toggleYear = (yearKey: string) => {
+        setExpandedYears((prev: string[]) => 
+            prev.includes(yearKey) ? prev.filter((y: string) => y !== yearKey) : [...prev, yearKey]
+        );
+    };
+
+    const toggleVariant = (variantKey: string) => {
+        setExpandedVariants((prev: string[]) => 
+            prev.includes(variantKey) ? prev.filter((v: string) => v !== variantKey) : [...prev, variantKey]
         );
     };
 
@@ -328,20 +374,88 @@ export const InventoryManager = () => {
 
             {isAdding && (
                 <div className="bg-white dark:bg-neutral-800 p-8 rounded-[2.5rem] border-2 border-brand-red shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300">
-                    <form onSubmit={handleAddCar} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <form onSubmit={handleAddCar} className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div className="md:col-span-1">
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Car Name / Model</label>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Brand</label>
                             <input 
                                 type="text" 
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                placeholder="e.g. Innova Crysta 2021"
+                                value={brand}
+                                onChange={(e) => setBrand(e.target.value)}
+                                placeholder="e.g. Toyota"
+                                className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                                required 
+                            />
+                        </div>
+                        <div className="md:col-span-1">
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Model Name</label>
+                            <input 
+                                type="text" 
+                                value={model}
+                                onChange={(e) => setModel(e.target.value)}
+                                placeholder="e.g. Innova Crysta"
                                 className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
                                 required 
                             />
                         </div>
                         <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Purchase Price (Initial)</label>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Year of Manufacture</label>
+                            <input 
+                                type="number" 
+                                value={year}
+                                onChange={(e) => setYear(parseInt(e.target.value))}
+                                placeholder="2021"
+                                className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                                required 
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Engine / Variant</label>
+                            <input 
+                                type="text" 
+                                value={variant}
+                                onChange={(e) => setVariant(e.target.value)}
+                                placeholder="e.g. 2.4 VX"
+                                className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                                required 
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Fuel Type</label>
+                            <select 
+                                value={fuelType}
+                                onChange={(e) => setFuelType(e.target.value as any)}
+                                className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                            >
+                                <option value="Petrol">Petrol</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="CNG">CNG</option>
+                                <option value="Electric">Electric</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Transmission</label>
+                            <select 
+                                value={transmission}
+                                onChange={(e) => setTransmission(e.target.value as any)}
+                                className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                            >
+                                <option value="Manual">Manual</option>
+                                <option value="Automatic">Automatic</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Number Plate</label>
+                            <input 
+                                type="text" 
+                                value={licensePlate}
+                                onChange={(e) => setLicensePlate(e.target.value)}
+                                placeholder="MH 12 AB 1234"
+                                className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Purchase Price</label>
                             <input 
                                 type="number" 
                                 value={purchasePrice}
@@ -349,16 +463,6 @@ export const InventoryManager = () => {
                                 placeholder="1600000"
                                 className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
                                 required 
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Number Plate (Optional)</label>
-                            <input 
-                                type="text" 
-                                value={licensePlate}
-                                onChange={(e) => setLicensePlate(e.target.value)}
-                                placeholder="MH 12 AB 1234"
-                                className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
                             />
                         </div>
                         <div>
@@ -436,7 +540,9 @@ export const InventoryManager = () => {
                     )}
                     
                     {Object.entries(groupedInventory).map(([brand, models]) => {
-                        const brandCount = Object.values(models).reduce((sum, units) => sum + units.length, 0);
+                        const brandCount = Object.values(models).reduce((sum, years) => 
+                            sum + Object.values(years).reduce((s, variants) => 
+                                s + Object.values(variants).reduce((ss, units) => ss + units.length, 0), 0), 0);
                         return (
                             <div key={brand} className="space-y-3">
                                 <button 
@@ -456,8 +562,10 @@ export const InventoryManager = () => {
 
                                 {expandedBrands.includes(brand) && (
                                     <div className="space-y-4 ml-4 pl-4 border-l-2 border-neutral-100 dark:border-neutral-800 animate-in slide-in-from-left-2 duration-300">
-                                        {Object.entries(models).map(([model, units]) => {
+                                        {Object.entries(models).map(([model, years]) => {
                                             const modelKey = `${brand}-${model}`;
+                                            const modelCount = Object.values(years).reduce((s, variants) => 
+                                                s + Object.values(variants).reduce((ss, units) => ss + units.length, 0), 0);
                                             return (
                                                 <div key={model} className="space-y-2">
                                                     <button 
@@ -469,94 +577,148 @@ export const InventoryManager = () => {
                                                             {model}
                                                         </span>
                                                         <span className="ml-auto text-[9px] font-black text-neutral-400 bg-neutral-50 dark:bg-neutral-900 px-2 py-0.5 rounded border dark:border-neutral-700">
-                                                            {units.length}
+                                                            {modelCount}
                                                         </span>
                                                     </button>
 
                                                     {expandedModels.includes(modelKey) && (
-                                                        <div className="space-y-3 ml-4 pl-4 border-l border-dashed border-neutral-200 dark:border-neutral-700 animate-in slide-in-from-top-1 duration-200">
-                                                            {units.map(car => {
-                                                                const stats = calculateCarStats(car, transactions);
-                                                                const isSelected = selectedCarId === car.id;
+                                                        <div className="space-y-3 ml-4 pl-4 border-l border-dashed border-neutral-200 dark:border-neutral-700">
+                                                            {Object.entries(years).map(([year, variants]) => {
+                                                                const yearKey = `${modelKey}-${year}`;
+                                                                const yearCount = Object.values(variants).reduce((ss, units) => ss + units.length, 0);
                                                                 return (
-                                                                    <button 
-                                                                        key={car.id}
-                                                                        onClick={() => setSelectedCarId(car.id)}
-                                                                        className={`w-full text-left p-6 rounded-[2rem] border transition-all duration-500 group relative overflow-hidden ${
-                                                                            isSelected 
-                                                                            ? 'bg-neutral-900 dark:bg-white border-neutral-900 dark:border-white shadow-2xl shadow-red-500/20 -translate-y-1' 
-                                                                            : 'bg-white/80 dark:bg-neutral-800/50 backdrop-blur-sm border-neutral-100 dark:border-neutral-700 hover:border-brand-red/50 hover:shadow-lg'
-                                                                        }`}
-                                                                    >
-                                                                        {isSelected && (
-                                                                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-red opacity-10 blur-3xl -mr-16 -mt-16 animate-pulse"></div>
-                                                                        )}
-                                                                        
-                                                                        <div className="flex justify-between items-start gap-4 mb-6 relative z-10">
-                                                                            <div className="flex-1 min-w-0">
-                                                                                <div className="flex items-center gap-3 mb-1">
-                                                                                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap ${isSelected ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-400'}`}>
-                                                                                        #{car.id.slice(0, 6)}
-                                                                                    </span>
-                                                                                    {car.licensePlate && (
-                                                                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter border whitespace-nowrap ${
-                                                                                            isSelected 
-                                                                                            ? 'bg-brand-red border-brand-red text-white' 
-                                                                                            : 'bg-neutral-100 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300'
-                                                                                        }`}>
-                                                                                            {car.licensePlate}
-                                                                                        </span>
-                                                                                    )}
-                                                                                </div>
-                                                                                <h3 className={`text-sm font-black uppercase tracking-tight truncate ${isSelected ? 'text-white dark:text-neutral-900' : 'text-neutral-900 dark:text-white'}`}>
-                                                                                    {car.licensePlate || car.name}
-                                                                                </h3>
-                                                                            </div>
-                                                                            <span className={`shrink-0 px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-sm ${
-                                                                                car.status === 'sold' 
-                                                                                ? 'bg-emerald-500 text-white' 
-                                                                                : car.status === 'reserved'
-                                                                                ? 'bg-amber-500 text-white'
-                                                                                : 'bg-brand-red text-white'
-                                                                            }`}>
-                                                                                {car.status}
+                                                                    <div key={year} className="space-y-2">
+                                                                        <button 
+                                                                            onClick={() => toggleYear(yearKey)}
+                                                                            className="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 rounded-lg transition-colors group"
+                                                                        >
+                                                                            <span className="text-xs">{expandedYears.includes(yearKey) ? '🗓️' : '📅'}</span>
+                                                                            <span className="text-[11px] font-bold text-neutral-400 dark:text-neutral-500 group-hover:text-brand-red">
+                                                                                {year}
                                                                             </span>
-                                                                        </div>
+                                                                            <span className="ml-auto text-[8px] font-black text-neutral-300">
+                                                                                {yearCount}
+                                                                            </span>
+                                                                        </button>
 
-                                                                        <div className="grid grid-cols-2 gap-4 relative z-10">
-                                                                            <div className="space-y-1">
-                                                                                <p className={`text-[9px] font-black uppercase tracking-[0.1em] ${isSelected ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-400'}`}>Cost</p>
-                                                                                <p className={`text-sm font-black tabular-nums ${isSelected ? 'text-white dark:text-neutral-900' : 'text-neutral-900 dark:text-white'}`}>
-                                                                                    {formatCurrency(stats.totalCosting)}
-                                                                                </p>
+                                                                        {expandedYears.includes(yearKey) && (
+                                                                            <div className="space-y-2 ml-4 pl-3 border-l border-neutral-100 dark:border-neutral-800">
+                                                                                {Object.entries(variants).map(([variant, units]) => {
+                                                                                    const variantKey = `${yearKey}-${variant}`;
+                                                                                    return (
+                                                                                        <div key={variant} className="space-y-2">
+                                                                                            <button 
+                                                                                                onClick={() => toggleVariant(variantKey)}
+                                                                                                className="flex items-center gap-2 w-full px-2 py-1 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 rounded-lg transition-colors group"
+                                                                                            >
+                                                                                                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400 dark:text-neutral-600 group-hover:text-brand-red">
+                                                                                                    {variant}
+                                                                                                </span>
+                                                                                                <span className="ml-auto text-[8px] font-black text-neutral-300">
+                                                                                                    {units.length}
+                                                                                                </span>
+                                                                                            </button>
+
+                                                                                            {expandedVariants.includes(variantKey) && (
+                                                                                                <div className="space-y-3 pt-2">
+                                                                                                    {units.map(car => {
+                                                                                                        const stats = calculateCarStats(car, transactions);
+                                                                                                        const isSelected = selectedCarId === car.id;
+                                                                                                        return (
+                                                                                                            <button 
+                                                                                                                key={car.id}
+                                                                                                                onClick={() => setSelectedCarId(car.id)}
+                                                                                                                className={`w-full text-left p-6 rounded-[2rem] border transition-all duration-500 group relative overflow-hidden ${
+                                                                                                                    isSelected 
+                                                                                                                    ? 'bg-neutral-900 dark:bg-white border-neutral-900 dark:border-white shadow-2xl shadow-red-500/20 -translate-y-1' 
+                                                                                                                    : 'bg-white/80 dark:bg-neutral-800/50 backdrop-blur-sm border-neutral-100 dark:border-neutral-700 hover:border-brand-red/50 hover:shadow-lg'
+                                                                                                                }`}
+                                                                                                            >
+                                                                                                                {isSelected && (
+                                                                                                                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-red opacity-10 blur-3xl -mr-16 -mt-16 animate-pulse"></div>
+                                                                                                                )}
+                                                                                                                
+                                                                                                                <div className="flex justify-between items-start gap-4 mb-6 relative z-10">
+                                                                                                                    <div className="flex-1 min-w-0">
+                                                                                                                        <div className="flex items-center gap-3 mb-1">
+                                                                                                                            <span className={`text-[10px] font-black uppercase tracking-[0.2em] whitespace-nowrap ${isSelected ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-400'}`}>
+                                                                                                                                #{car.id.slice(0, 6)}
+                                                                                                                            </span>
+                                                                                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter border whitespace-nowrap ${
+                                                                                                                                isSelected 
+                                                                                                                                ? 'bg-brand-red border-brand-red text-white' 
+                                                                                                                                : 'bg-neutral-100 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-600 text-neutral-600 dark:text-neutral-300'
+                                                                                                                            }`}>
+                                                                                                                                {car.licensePlate}
+                                                                                                                            </span>
+                                                                                                                        </div>
+                                                                                                                        <div className="flex flex-wrap gap-1 mb-2">
+                                                                                                                            <span className={`px-1.5 py-0.5 rounded-[4px] text-[8px] font-black uppercase tracking-widest ${isSelected ? 'bg-white/10 text-white' : 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'}`}>
+                                                                                                                                {car.fuelType}
+                                                                                                                            </span>
+                                                                                                                            <span className={`px-1.5 py-0.5 rounded-[4px] text-[8px] font-black uppercase tracking-widest ${isSelected ? 'bg-white/10 text-white' : 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'}`}>
+                                                                                                                                {car.transmission}
+                                                                                                                            </span>
+                                                                                                                        </div>
+                                                                                                                        <h3 className={`text-sm font-black uppercase tracking-tight truncate ${isSelected ? 'text-white dark:text-neutral-900' : 'text-neutral-900 dark:text-white'}`}>
+                                                                                                                            {car.licensePlate}
+                                                                                                                        </h3>
+                                                                                                                    </div>
+                                                                                                                    <span className={`shrink-0 px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-sm ${
+                                                                                                                        car.status === 'sold' 
+                                                                                                                        ? 'bg-emerald-500 text-white' 
+                                                                                                                        : car.status === 'reserved'
+                                                                                                                        ? 'bg-amber-500 text-white'
+                                                                                                                        : 'bg-brand-red text-white'
+                                                                                                                    }`}>
+                                                                                                                        {car.status}
+                                                                                                                    </span>
+                                                                                                                </div>
+
+                                                                                                                <div className="grid grid-cols-2 gap-4 relative z-10">
+                                                                                                                    <div className="space-y-1">
+                                                                                                                        <p className={`text-[9px] font-black uppercase tracking-[0.1em] ${isSelected ? 'text-neutral-400 dark:text-neutral-500' : 'text-neutral-400'}`}>Cost</p>
+                                                                                                                        <p className={`text-sm font-black tabular-nums ${isSelected ? 'text-white dark:text-neutral-900' : 'text-neutral-900 dark:text-white'}`}>
+                                                                                                                            {formatCurrency(stats.totalCosting)}
+                                                                                                                        </p>
+                                                                                                                    </div>
+                                                                                                                    <div className="space-y-2">
+                                                                                                                        {car.status === 'sold' && (
+                                                                                                                            <div className="space-y-1">
+                                                                                                                                <p className={`text-[9px] font-black uppercase tracking-[0.1em] ${isSelected ? 'text-emerald-400' : 'text-neutral-400'}`}>Profit</p>
+                                                                                                                                <p className={`text-sm font-black tabular-nums ${isSelected ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-500'}`}>
+                                                                                                                                    +{formatCurrency(stats.netProfit)}
+                                                                                                                                </p>
+                                                                                                                            </div>
+                                                                                                                        )}
+                                                                                                                        {isAdmin && (
+                                                                                                                            <button 
+                                                                                                                                onClick={(e) => {
+                                                                                                                                    e.stopPropagation();
+                                                                                                                                    router.push(`/log-expenses?vehicleId=${car.id}`);
+                                                                                                                                }}
+                                                                                                                                className={`w-full py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all ${
+                                                                                                                                    isSelected 
+                                                                                                                                    ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' 
+                                                                                                                                    : 'bg-neutral-50 border-neutral-100 text-neutral-400 hover:border-brand-red hover:text-brand-red'
+                                                                                                                                }`}
+                                                                                                                            >
+                                                                                                                                + ADD EXPENSE
+                                                                                                                            </button>
+                                                                                                                        )}
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </button>
+                                                                                                        );
+                                                                                                    })}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    );
+                                                                                })}
                                                                             </div>
-                                                                            <div className="space-y-2">
-                                                                                {car.status === 'sold' && (
-                                                                                    <div className="space-y-1">
-                                                                                        <p className={`text-[9px] font-black uppercase tracking-[0.1em] ${isSelected ? 'text-emerald-400' : 'text-neutral-400'}`}>Profit</p>
-                                                                                        <p className={`text-sm font-black tabular-nums ${isSelected ? 'text-emerald-400' : 'text-emerald-600 dark:text-emerald-500'}`}>
-                                                                                            +{formatCurrency(stats.netProfit)}
-                                                                                        </p>
-                                                                                    </div>
-                                                                                )}
-                                                                                {isAdmin && (
-                                                                                    <button 
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            router.push(`/log-expenses?vehicleId=${car.id}`);
-                                                                                        }}
-                                                                                        className={`w-full py-2 rounded-xl text-[8px] font-black uppercase tracking-widest border transition-all ${
-                                                                                            isSelected 
-                                                                                            ? 'bg-white/10 border-white/20 text-white hover:bg-white/20' 
-                                                                                            : 'bg-neutral-50 border-neutral-100 text-neutral-400 hover:border-brand-red hover:text-brand-red'
-                                                                                        }`}
-                                                                                    >
-                                                                                        + ADD EXPENSE
-                                                                                    </button>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    </button>
+                                                                        )}
+                                                                    </div>
                                                                 );
                                                             })}
                                                         </div>
@@ -583,9 +745,13 @@ export const InventoryManager = () => {
                                         </div>
                                     )}
                                     <div className="min-w-0">
-                                        <h2 className="text-3xl font-black uppercase tracking-tighter truncate">{selectedCar.name}</h2>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <p className="text-xs font-bold text-red-400 uppercase tracking-[0.3em] italic leading-none whitespace-nowrap">Vehicle Operational Sheet</p>
+                                        <h2 className="text-3xl font-black uppercase tracking-tighter truncate">{selectedCar.brand} {selectedCar.model}</h2>
+                                        <div className="flex items-center gap-3 mt-1">
+                                            <p className="text-xs font-bold text-red-400 uppercase tracking-[0.3em] italic leading-none whitespace-nowrap">{selectedCar.year} • {selectedCar.variant}</p>
+                                            <div className="flex gap-2">
+                                                <span className="px-2 py-0.5 rounded bg-white/10 text-[9px] font-black uppercase tracking-widest border border-white/20">{selectedCar.fuelType}</span>
+                                                <span className="px-2 py-0.5 rounded bg-white/10 text-[9px] font-black uppercase tracking-widest border border-white/20">{selectedCar.transmission}</span>
+                                            </div>
                                             {selectedCar.investorEmails && selectedCar.investorEmails.length > 0 && (
                                                 <div className="flex flex-wrap gap-1 ml-2">
                                                     {selectedCar.investorEmails.map(email => (
@@ -857,14 +1023,78 @@ export const InventoryManager = () => {
                     <div className="bg-white dark:bg-neutral-800 p-8 rounded-[2.5rem] shadow-2xl max-w-2xl w-full border-2 border-brand-red">
                         <h3 className="text-2xl font-black uppercase tracking-tighter mb-6">Update Vehicle Details</h3>
                         <form onSubmit={handleEditCarSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="md:col-span-2">
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Car Name / Model</label>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Brand</label>
                                 <input 
                                     type="text" 
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    value={brand}
+                                    onChange={(e) => setBrand(e.target.value)}
                                     className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
                                     required 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Model</label>
+                                <input 
+                                    type="text" 
+                                    value={model}
+                                    onChange={(e) => setModel(e.target.value)}
+                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                                    required 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Year</label>
+                                <input 
+                                    type="number" 
+                                    value={year}
+                                    onChange={(e) => setYear(parseInt(e.target.value))}
+                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                                    required 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Variant</label>
+                                <input 
+                                    type="text" 
+                                    value={variant}
+                                    onChange={(e) => setVariant(e.target.value)}
+                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                                    required 
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Fuel Type</label>
+                                <select 
+                                    value={fuelType}
+                                    onChange={(e) => setFuelType(e.target.value as any)}
+                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                                >
+                                    <option value="Petrol">Petrol</option>
+                                    <option value="Diesel">Diesel</option>
+                                    <option value="CNG">CNG</option>
+                                    <option value="Electric">Electric</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Transmission</label>
+                                <select 
+                                    value={transmission}
+                                    onChange={(e) => setTransmission(e.target.value as any)}
+                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
+                                >
+                                    <option value="Manual">Manual</option>
+                                    <option value="Automatic">Automatic</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Number Plate</label>
+                                <input 
+                                    type="text" 
+                                    value={licensePlate}
+                                    onChange={(e) => setLicensePlate(e.target.value)}
+                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold uppercase"
+                                    required
                                 />
                             </div>
                             <div>
@@ -875,15 +1105,6 @@ export const InventoryManager = () => {
                                     onChange={(e) => setPurchasePrice(e.target.value)}
                                     className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold"
                                     required 
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Number Plate</label>
-                                <input 
-                                    type="text" 
-                                    value={licensePlate}
-                                    onChange={(e) => setLicensePlate(e.target.value)}
-                                    className="w-full px-6 py-4 bg-gray-50 dark:bg-neutral-900 border rounded-2xl focus:ring-2 focus:ring-brand-red outline-none font-bold uppercase"
                                 />
                             </div>
                             <div className="md:col-span-2">

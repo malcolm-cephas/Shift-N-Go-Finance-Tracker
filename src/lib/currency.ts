@@ -1,8 +1,8 @@
 // Legacy function for backward compatibility
 export function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('en-GB', {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'GBP',
+    currency: 'INR',
   }).format(amount);
 };
 

@@ -90,15 +90,12 @@ export const RecordBalances = () => {
   };
 
   const groupedAccounts = getAccountsWithBalances().reduce((groups, account) => {
-    if (!groups[account.type]) {
-      groups[account.type] = {};
+    if (!groups[account.category]) {
+      groups[account.category] = [];
     }
-    if (!groups[account.type][account.category]) {
-      groups[account.type][account.category] = [];
-    }
-    groups[account.type][account.category].push(account);
+    groups[account.category].push(account);
     return groups;
-  }, {} as Record<string, Record<string, { id: string; name: string; type: string; category: string; currentBalance: number }[]>>);
+  }, {} as Record<string, { id: string; name: string; category: string; currentBalance: number }[]>);
 
   if (accounts.length === 0) {
     return (
@@ -141,50 +138,48 @@ export const RecordBalances = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          {Object.entries(groupedAccounts).map(([type, categories]) => (
-            <div key={type} className="border dark:border-neutral-600 rounded-lg p-4">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-neutral-100 mb-4 capitalize">
-                {type === 'asset' ? 'Assets' : type === 'liability' ? 'Liabilities' : 'Equity'}
-              </h2>
+          <div className="border dark:border-neutral-600 rounded-lg p-4">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-neutral-100 mb-4 capitalize">
+              Accounts
+            </h2>
 
-              {Object.entries(categories).map(([category, categoryAccounts]) => (
-                <div key={category} className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-700 dark:text-neutral-300 mb-3">{category}</h3>
-                  <div className="space-y-3">
-                    {categoryAccounts.map((account) => {
-                      const input = balanceInputs.find(input => input.accountId === account.id);
-                      const currentBalance = account.currentBalance;
+            {Object.entries(groupedAccounts).map(([category, categoryAccounts]) => (
+              <div key={category} className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-neutral-300 mb-3">{category}</h3>
+                <div className="space-y-3">
+                  {categoryAccounts.map((account) => {
+                    const input = balanceInputs.find(input => input.accountId === account.id);
+                    const currentBalance = account.currentBalance;
 
-                      return (
-                        <div key={account.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-700/50 rounded-lg">
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-800 dark:text-neutral-200">{account.name}</div>
-                            <div className="text-sm text-gray-500 dark:text-neutral-400">
-                              Current: {formatCurrency(currentBalance)}
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-3">
-                            <label htmlFor={`balance-${account.id}`} className="text-sm font-medium text-gray-700 dark:text-neutral-300">
-                              New Balance:
-                            </label>
-                            <input
-                              type="text"
-                              id={`balance-${account.id}`}
-                              value={input?.amount || ''}
-                              onChange={(e) => handleAmountChange(account.id, e.target.value)}
-                              disabled={isReadOnly}
-                              className="w-32 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-right bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 disabled:opacity-50"
-                              placeholder="0.00"
-                            />
+                    return (
+                      <div key={account.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-neutral-700/50 rounded-lg">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800 dark:text-neutral-200">{account.name}</div>
+                          <div className="text-sm text-gray-500 dark:text-neutral-400">
+                            Current: {formatCurrency(currentBalance)}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                        <div className="flex items-center space-x-3">
+                          <label htmlFor={`balance-${account.id}`} className="text-sm font-medium text-gray-700 dark:text-neutral-300">
+                            New Balance:
+                          </label>
+                          <input
+                            type="text"
+                            id={`balance-${account.id}`}
+                            value={input?.amount || ''}
+                            onChange={(e) => handleAmountChange(account.id, e.target.value)}
+                            disabled={isReadOnly}
+                            className="w-32 px-3 py-2 border border-gray-300 dark:border-neutral-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-red focus:border-transparent text-right bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 disabled:opacity-50"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
 
           {!isReadOnly && (
             <div className="flex justify-center pt-6">

@@ -1,5 +1,3 @@
-export type AccountType = 'asset' | 'liability' | 'equity';
-
 export interface InvestorShare {
   email: string;
   share: number; // Percentage, e.g. 25 for 25%
@@ -8,7 +6,6 @@ export interface InvestorShare {
 export interface Account {
   id: string;
   name: string;
-  type: AccountType;
   category: string;
   createdAt: Date;
 }
@@ -22,12 +19,18 @@ export interface Balance {
 
 export interface InventoryItem {
   id: string;
-  name: string;
+  name: string; // Keep as fallback/display name
+  brand: string;
+  model: string;
+  year: number;
+  variant: string; // Engine capacity or specific variant
+  fuelType: 'Petrol' | 'Diesel' | 'CNG' | 'Electric';
+  transmission: 'Manual' | 'Automatic';
   purchasePrice: number;
   salePrice?: number;
   sellingBrokerCommission?: number;
   status: 'available' | 'sold' | 'reserved';
-  licensePlate?: string; // Optional: Registration number
+  licensePlate: string;
   investorEmails?: string[]; // Deprecated: Tagged investors who funded this car
   investors?: InvestorShare[]; // New: Investors with their specific shares
   createdAt: Date;
@@ -54,34 +57,14 @@ export interface AccountWithHistory extends Account {
   balanceHistory: { date: Date; amount: number }[];
 }
 
-export interface ACCOUNT_CATEGORIES_TYPE {
-  asset: string[];
-  liability: string[];
-  equity: string[];
-}
-
-export const ACCOUNT_CATEGORIES: ACCOUNT_CATEGORIES_TYPE = {
-  asset: [
-    'Inventory (Pre-owned Cars)',
-    'Accounts Receivable (Financing)',
-    'Petty Cash',
-    'Main Business Bank Account',
-    'Fixed Assets (Showroom, etc.)',
-    'Other Business Assets'
-  ],
-  liability: [
-    'Floor Plan Financing',
-    'Accounts Payable (Vendors)',
-    'Vendor Bills (Repairs/Detailing)',
-    'Business Loans',
-    'Tax Liabilities (GST/VAT)',
-    'Other Business Liabilities'
-  ],
-  equity: [
-    'Owner Investment',
-    'Retained Earnings'
-  ]
-} as const;
+export const ACCOUNT_CATEGORIES = [
+  'Bank Account',
+  'Cash',
+  'Mobile Money (UPI)',
+  'Credit Card',
+  'Business Loans',
+  'Other'
+];
 
 export const TRANSACTION_CATEGORIES = {
   income: [

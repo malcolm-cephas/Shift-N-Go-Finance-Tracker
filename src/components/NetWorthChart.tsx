@@ -39,9 +39,7 @@ interface NetWorthChartProps {
 
 interface NetWorthDataPoint {
   date: Date;
-  assets: number;
-  liabilities: number;
-  netWorth: number; // Keep internal field name for now or rename if needed, but display label is what matters
+  totalBalance: number;
 }
 
 export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChartProps) => {
@@ -66,8 +64,7 @@ export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChar
     const dataPoints: NetWorthDataPoint[] = [];
 
     for (const date of allDates) {
-      let totalAssets = 0;
-      let totalLiabilities = 0;
+      let totalBalance = 0;
 
       // For each account, get the most recent balance up to this date
       for (const account of accounts) {
@@ -76,21 +73,13 @@ export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChar
           .sort((a, b) => b.date.getTime() - a.date.getTime());
 
         if (accountBalances.length > 0) {
-          const mostRecentBalance = accountBalances[0].amount;
-
-          if (account.type === 'asset') {
-            totalAssets += mostRecentBalance;
-          } else if (account.type === 'liability') {
-            totalLiabilities += Math.abs(mostRecentBalance); // Convert to positive for display
-          }
+          totalBalance += accountBalances[0].amount;
         }
       }
 
       dataPoints.push({
         date,
-        assets: totalAssets,
-        liabilities: totalLiabilities,
-        netWorth: totalAssets - totalLiabilities,
+        totalBalance,
       });
     }
 
@@ -109,26 +98,8 @@ export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChar
     labels: netWorthData.map(point => point.date),
     datasets: [
       {
-        label: 'Assets',
-        data: netWorthData.map(point => point.assets),
-        borderColor: 'rgb(34, 197, 94)',
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-        borderWidth: 2,
-        fill: false,
-        tension: 0.1,
-      },
-      {
-        label: 'Liabilities',
-        data: netWorthData.map(point => point.liabilities),
-        borderColor: 'rgb(239, 68, 68)',
-        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-        borderWidth: 2,
-        fill: false,
-        tension: 0.1,
-      },
-      {
-        label: 'Business Net Value',
-        data: netWorthData.map(point => point.netWorth),
+        label: 'Total Business Value',
+        data: netWorthData.map(point => point.totalBalance),
         borderColor: 'rgb(59, 130, 246)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         borderWidth: 3,
@@ -148,7 +119,7 @@ export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChar
       },
       title: {
         display: true,
-        text: 'Business Net Value Over Time',
+        text: 'Total Business Value Over Time',
         color: textColor,
         font: {
           size: 16,
@@ -204,11 +175,11 @@ export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChar
   };
 
   // Calculate summary stats with safety guards
-  const latestData = netWorthData.length > 0 ? netWorthData[netWorthData.length - 1] : { netWorth: 0, assets: 0, liabilities: 0 };
-  const firstData = netWorthData.length > 0 ? netWorthData[0] : { netWorth: 0, assets: 0, liabilities: 0 };
-  const netWorthChange = latestData.netWorth - firstData.netWorth;
-  const netWorthChangePercent = firstData.netWorth !== 0
-    ? ((latestData.netWorth - firstData.netWorth) / Math.abs(firstData.netWorth)) * 100
+  const latestData = netWorthData.length > 0 ? netWorthData[netWorthData.length - 1] : { totalBalance: 0 };
+  const firstData = netWorthData.length > 0 ? netWorthData[0] : { totalBalance: 0 };
+  const netWorthChange = latestData.totalBalance - firstData.totalBalance;
+  const netWorthChangePercent = firstData.totalBalance !== 0
+    ? ((latestData.totalBalance - firstData.totalBalance) / Math.abs(firstData.totalBalance)) * 100
     : 0;
 
   if (!mounted) return null;
@@ -216,34 +187,20 @@ export const NetWorthChart = ({ accounts, balances, height = 400 }: NetWorthChar
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-neutral-50 dark:bg-neutral-800 rounded-xl p-6 border border-neutral-200 dark:border-neutral-700 shadow-sm">
           <h3 className="text-xs font-bold text-brand-red uppercase tracking-wider mb-2">Current Business Value</h3>
-          <div className={`text-2xl font-black truncate ${latestData.netWorth >= 0 ? 'text-gray-900 dark:text-white' : 'text-red-600 dark:text-red-400'}`}>
-            {new Intl.NumberFormat(selectedCurrency.locale, { style: 'currency', currency: selectedCurrency.code, maximumFractionDigits: 0 }).format(latestData.netWorth)}
+          <div className={`text-2xl font-black truncate ${latestData.totalBalance >= 0 ? 'text-gray-900 dark:text-white' : 'text-red-600 dark:text-red-400'}`}>
+            {new Intl.NumberFormat(selectedCurrency.locale, { style: 'currency', currency: selectedCurrency.code, maximumFractionDigits: 0 }).format(latestData.totalBalance)}
           </div>
         </div>
 
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
-          <h3 className="font-semibold text-green-800 dark:text-green-300 mb-2">Total Assets</h3>
-          <div className="text-xl font-bold text-green-600 dark:text-green-400 truncate">
-            {new Intl.NumberFormat(selectedCurrency.locale, { style: 'currency', currency: selectedCurrency.code, maximumFractionDigits: 0 }).format(latestData.assets)}
-          </div>
-        </div>
-
-        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 border border-red-200 dark:border-red-800">
-          <h3 className="font-semibold text-red-800 dark:text-red-300 mb-2">Total Liabilities</h3>
-          <div className="text-xl font-bold text-red-600 dark:text-red-400 truncate">
-            {new Intl.NumberFormat(selectedCurrency.locale, { style: 'currency', currency: selectedCurrency.code, maximumFractionDigits: 0 }).format(latestData.liabilities)}
-          </div>
-        </div>
-
-        <div className="bg-gray-50 dark:bg-neutral-700/50 rounded-lg p-4 border border-gray-200 dark:border-neutral-600">
-          <h3 className="font-semibold text-gray-800 dark:text-neutral-200 mb-2">Change</h3>
-          <div className={`text-lg font-bold flex flex-col ${netWorthChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+        <div className="bg-gray-50 dark:bg-neutral-700/50 rounded-lg p-6 border border-gray-200 dark:border-neutral-600">
+          <h3 className="text-xs font-bold text-gray-800 dark:text-neutral-200 uppercase tracking-wider mb-2">Change</h3>
+          <div className={`text-xl font-bold flex items-center gap-2 ${netWorthChange >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
             <span className="truncate">{new Intl.NumberFormat(selectedCurrency.locale, { style: 'currency', currency: selectedCurrency.code, maximumFractionDigits: 0 }).format(netWorthChange)}</span>
-            <span className="text-xs">
+            <span className="text-sm font-medium">
               ({netWorthChange >= 0 ? '+' : ''}{netWorthChangePercent.toFixed(1)}%)
             </span>
           </div>
